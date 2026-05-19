@@ -1,6 +1,7 @@
 <script setup>
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { initDB } from '@/utils/db/index.js'
+import { useUserStore } from '@/store/user-store.js'
 
 onLaunch(async () => {
 	console.log('App Launch - 招财记账')
@@ -10,6 +11,8 @@ onLaunch(async () => {
 	} catch (e) {
 		console.error('数据库初始化失败', e)
 	}
+	const userStore = useUserStore()
+	userStore.initGuestUser()
 })
 
 onShow(() => {})

@@ -1,23 +1,147 @@
 <template>
 	<view class="page-add">
-		<view class="page-content">
+		<view class="page-content anim-fade-in">
+			<!-- 顶部：取消 / 支出收入切换 / 完成 -->
 			<view class="header">
 				<text class="cancel-btn" @tap="goBack">取消</text>
 				<view class="type-switch">
-					<text class="type-active">支出</text>
-					<text class="type-inactive">收入</text>
+					<text :class="['type-item', { 'type-active': isExpense }]" @tap="isExpense = true">支出</text>
+					<text :class="['type-item', { 'type-active': !isExpense }]" @tap="isExpense = false">收入</text>
 				</view>
-				<text class="done-btn">完成</text>
+				<text class="done-btn" @tap="onSubmit">完成</text>
 			</view>
-			<view class="placeholder-card">
-				<text class="placeholder-text">💰 记账表单 - Phase 1-B 实现</text>
+
+			<!-- 金额显示 -->
+			<view class="amount-area">
+				<text class="amount-label">输入金额</text>
+				<text :class="['amount-display', { 'anim-shake': shaking }]">¥ {{ displayAmount }}</text>
+			</view>
+
+			<!-- 分类选择 -->
+			<view class="category-grid">
+				<view
+					v-for="(cat, idx) in categories"
+					:key="idx"
+					:class="['category-item', { 'category-selected': selectedCategory === idx }]"
+					@tap="selectedCategory = idx"
+				>
+					<view :class="['category-icon-wrap', { 'category-icon-selected': selectedCategory === idx }]">
+						<text class="category-icon">{{ cat.icon }}</text>
+					</view>
+					<text :class="['category-name', { 'category-name-active': selectedCategory === idx }]">{{ cat.label }}</text>
+				</view>
+			</view>
+
+			<!-- 备注输入 -->
+			<view class="remark-row">
+				<text class="remark-icon">📝</text>
+				<input class="remark-input" v-model="remark" placeholder="写点备注喵..." />
+			</view>
+
+			<!-- 数字键盘 -->
+			<view class="keyboard">
+				<view class="keyboard-main">
+					<view class="key-row">
+						<text class="key" @tap="inputKey('1')">1</text>
+						<text class="key" @tap="inputKey('2')">2</text>
+						<text class="key" @tap="inputKey('3')">3</text>
+					</view>
+					<view class="key-row">
+						<text class="key" @tap="inputKey('4')">4</text>
+						<text class="key" @tap="inputKey('5')">5</text>
+						<text class="key" @tap="inputKey('6')">6</text>
+					</view>
+					<view class="key-row">
+						<text class="key" @tap="inputKey('7')">7</text>
+						<text class="key" @tap="inputKey('8')">8</text>
+						<text class="key" @tap="inputKey('9')">9</text>
+					</view>
+					<view class="key-row">
+						<text class="key" @tap="inputKey('.')">.</text>
+						<text class="key key-zero" @tap="inputKey('0')">0</text>
+						<text class="key key-delete" @tap="onDelete">⌫</text>
+					</view>
+				</view>
+				<view class="keyboard-side">
+					<text class="key-confirm" @tap="onSubmit">记账\n喵~</text>
+				</view>
 			</view>
 		</view>
-		<custom-tab-bar :current="2" />
 	</view>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+import { useExpenseStore } from '@/store/expense-store.js'
+import { useUserStore } from '@/store/user-store.js'
+import { CATEGORIES } from '@/config/constants.js'
+import { getToday, getCurrentTime } from '@/utils/helpers.js'
+
+const expenseStore = useExpenseStore()
+const userStore = useUserStore()
+
+const isExpense = ref(true)
+const selectedCategory = ref(0)
+const amountStr = ref('')
+const remark = ref('')
+const shaking = ref(false)
+
+const categories = CATEGORIES
+
+const displayAmount = computed(() => {
+	if (!amountStr.value) return '0.00'
+	return amountStr.value
+})
+
+function inputKey(key) {
+	if (key === '.' && amountStr.value.includes('.')) return
+	if (amountStr.value.includes('.')) {
+		const decimal = amountStr.value.split('.')[1]
+		if (decimal && decimal.length >= 2) return
+	}
+	if (amountStr.value.length >= 10) return
+	amountStr.value += key
+}
+
+function onDelete() {
+	amountStr.value = amountStr.value.slice(0, -1)
+}
+
+async function onSubmit() {
+	const amount = parseFloat(amountStr.value)
+	if (!amountStr.value || amount === 0) {
+		shaking.value = true
+		uni.showToast({ title: '请输入金额喵~', icon: 'none' })
+		setTimeout(() => { shaking.value = false }, 500)
+		return
+	}
+
+	const cat = categories[selectedCategory.value]
+	const record = {
+		user_id: userStore.userId,
+		type: isExpense.value ? 'expense' : 'income',
+		category: cat.key,
+		item_name: remark.value || cat.label,
+		amount,
+		expense_date: getToday(),
+		expense_time: getCurrentTime(),
+		remark: remark.value || ''
+	}
+
+	try {
+		await expenseStore.createExpense(record)
+		uni.showToast({ title: '记账成功喵~', icon: 'success' })
+		amountStr.value = ''
+		remark.value = ''
+		selectedCategory.value = 0
+		setTimeout(() => {
+			uni.switchTab({ url: '/pages/home/index' })
+		}, 500)
+	} catch (e) {
+		uni.showToast({ title: '记账失败', icon: 'none' })
+	}
+}
+
 function goBack() {
 	uni.switchTab({ url: '/pages/home/index' })
 }
@@ -27,18 +151,22 @@ function goBack() {
 .page-add {
 	min-height: 100vh;
 	background: var(--color-bg);
-	padding-bottom: var(--tabbar-height);
+	display: flex;
+	flex-direction: column;
 }
 
 .page-content {
-	padding: 0 32rpx;
+	flex: 1;
+	padding: 0 24rpx;
+	display: flex;
+	flex-direction: column;
 }
 
 .header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 100rpx 0 32rpx;
+	padding: 80rpx 8rpx 24rpx;
 }
 
 .cancel-btn {
@@ -60,35 +188,172 @@ function goBack() {
 	padding: 4rpx;
 }
 
-.type-active {
-	padding: 12rpx 32rpx;
-	background: var(--color-bg-card);
-	border-radius: var(--radius-full);
-	font-size: 24rpx;
-	font-weight: 700;
-	box-shadow: var(--shadow-card);
-}
-
-.type-inactive {
+.type-item {
 	padding: 12rpx 32rpx;
 	font-size: 24rpx;
 	font-weight: 700;
 	color: var(--color-text-muted);
+	border-radius: var(--radius-full);
 }
 
-.placeholder-card {
+.type-active {
 	background: var(--color-bg-card);
-	border-radius: var(--radius-lg);
+	color: var(--color-text-primary);
 	box-shadow: var(--shadow-card);
-	padding: 64rpx 32rpx;
+}
+
+/* 金额显示 */
+.amount-area {
+	text-align: right;
+	padding: 16rpx 8rpx 32rpx;
+}
+
+.amount-label {
+	font-size: 22rpx;
+	color: var(--color-text-muted);
+}
+
+.amount-display {
+	display: block;
+	font-size: 80rpx;
+	font-weight: 800;
+	color: var(--color-text-primary);
+	margin-top: 8rpx;
+}
+
+/* 分类网格 */
+.category-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 24rpx;
+	margin-bottom: 24rpx;
+}
+
+.category-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8rpx;
+}
+
+.category-icon-wrap {
+	width: 96rpx;
+	height: 96rpx;
+	background: var(--color-bg-card);
+	border-radius: 32rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-top: 32rpx;
+	box-shadow: var(--shadow-card);
 }
 
-.placeholder-text {
-	font-size: 28rpx;
+.category-icon-selected {
+	border: 4rpx solid var(--color-primary);
+}
+
+.category-icon {
+	font-size: 40rpx;
+}
+
+.category-name {
+	font-size: 20rpx;
+	font-weight: 700;
 	color: var(--color-text-muted);
+}
+
+.category-name-active {
+	color: var(--color-text-primary);
+}
+
+/* 备注 */
+.remark-row {
+	display: flex;
+	align-items: center;
+	background: var(--color-bg-card);
+	border-radius: 32rpx;
+	padding: 24rpx 32rpx;
+	margin-bottom: 24rpx;
+	gap: 16rpx;
+}
+
+.remark-icon {
+	font-size: 28rpx;
+}
+
+.remark-input {
+	flex: 1;
+	font-size: 26rpx;
+	color: var(--color-text-primary);
+}
+
+/* 数字键盘 */
+.keyboard {
+	display: flex;
+	gap: 12rpx;
+	margin-top: auto;
+	padding-bottom: 32rpx;
+}
+
+.keyboard-main {
+	flex: 3;
+	display: flex;
+	flex-direction: column;
+	gap: 12rpx;
+}
+
+.key-row {
+	display: flex;
+	gap: 12rpx;
+}
+
+.key {
+	flex: 1;
+	height: 100rpx;
+	background: var(--color-bg-card);
+	border-radius: 24rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 36rpx;
+	font-weight: 700;
+	color: var(--color-text-primary);
+}
+
+.key-zero {
+	flex: 1;
+}
+
+.key-delete {
+	color: var(--color-text-muted);
+	background: var(--color-bg-gray);
+}
+
+.keyboard-side {
+	flex: 1;
+	display: flex;
+}
+
+.key-confirm {
+	flex: 1;
+	background: var(--color-primary);
+	border-radius: 24rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 28rpx;
+	font-weight: 700;
+	color: #FFFFFF;
+	white-space: pre-line;
+	text-align: center;
+}
+
+.anim-shake {
+	animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+	0%, 100% { transform: translateX(0); }
+	25% { transform: translateX(-10rpx); }
+	75% { transform: translateX(10rpx); }
 }
 </style>

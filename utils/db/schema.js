@@ -22,6 +22,7 @@ export const TABLES = {
 	expense_record: `CREATE TABLE IF NOT EXISTS expense_record (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id TEXT NOT NULL,
+		type TEXT DEFAULT 'expense',
 		expense_date TEXT NOT NULL,
 		expense_time TEXT NOT NULL,
 		item_name TEXT NOT NULL,

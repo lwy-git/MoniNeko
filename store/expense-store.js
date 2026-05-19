@@ -9,11 +9,15 @@ export const useExpenseStore = defineStore('expense', () => {
 	const { loadByDate, loadByMonth, addExpense, deleteExpense, updateExpense } = useExpense()
 
 	const todayTotal = computed(() =>
-		todayExpenses.value.reduce((sum, e) => sum + e.amount, 0)
+		todayExpenses.value
+			.filter(e => e.type !== 'income')
+			.reduce((sum, e) => sum + e.amount, 0)
 	)
 
 	const monthTotal = computed(() =>
-		monthExpenses.value.reduce((sum, e) => sum + e.amount, 0)
+		monthExpenses.value
+			.filter(e => e.type !== 'income')
+			.reduce((sum, e) => sum + e.amount, 0)
 	)
 
 	async function fetchByDate(userId, date) {

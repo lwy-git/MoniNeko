@@ -45,17 +45,13 @@
 		{
 			"path": "pages/budget/index",
 			"style": {
-				"navigationBarTitleText": "设置预算",
-				"navigationBarBackgroundColor": "#FFF8F0",
-				"navigationBarTextStyle": "black"
+				"navigationStyle": "custom"
 			}
 		},
 		{
 			"path": "pages/report/index",
 			"style": {
-				"navigationBarTitleText": "今日结算",
-				"navigationBarBackgroundColor": "#FFF8F0",
-				"navigationBarTextStyle": "black"
+				"navigationStyle": "custom"
 			}
 		}
 	],
