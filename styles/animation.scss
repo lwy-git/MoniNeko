@@ -1,0 +1,82 @@
+@keyframes floating {
+	0%, 100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-10rpx);
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes bounce {
+	0%, 100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-8rpx);
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
+	}
+}
+
+@keyframes coinDrop {
+	0% {
+		transform: translateY(-100rpx);
+		opacity: 0;
+	}
+	60% {
+		transform: translateY(10rpx);
+		opacity: 1;
+	}
+	80% {
+		transform: translateY(-5rpx);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+@keyframes shake {
+	0%, 100% {
+		transform: translateX(0);
+	}
+	25% {
+		transform: translateX(-5rpx);
+	}
+	75% {
+		transform: translateX(5rpx);
+	}
+}
+
+.anim-float {
+	animation: floating 3s ease-in-out infinite;
+}
+
+.anim-fade-in {
+	animation: fadeIn 0.4s ease-out forwards;
+}
+
+.anim-bounce {
+	animation: bounce 1s ease-in-out infinite;
+}
+
+.anim-pulse {
+	animation: pulse 2s ease-in-out infinite;
+}

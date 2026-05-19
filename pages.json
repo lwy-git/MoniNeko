@@ -1,0 +1,99 @@
+{
+	"pages": [
+		{
+			"path": "pages/home/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/stats/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/add/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/detail/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/profile/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/splash/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/welcome/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/budget/index",
+			"style": {
+				"navigationBarTitleText": "设置预算",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		},
+		{
+			"path": "pages/report/index",
+			"style": {
+				"navigationBarTitleText": "今日结算",
+				"navigationBarBackgroundColor": "#FFF8F0",
+				"navigationBarTextStyle": "black"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "招财记账",
+		"navigationBarBackgroundColor": "#FFF8F0",
+		"backgroundColor": "#FFF8F0",
+		"backgroundColorTop": "#FFF8F0",
+		"backgroundColorBottom": "#FFF8F0"
+	},
+	"tabBar": {
+		"custom": true,
+		"color": "#999999",
+		"selectedColor": "#F6C445",
+		"backgroundColor": "#FFFFFF",
+		"borderStyle": "white",
+		"list": [
+			{
+				"pagePath": "pages/home/index",
+				"text": "首页"
+			},
+			{
+				"pagePath": "pages/stats/index",
+				"text": "统计"
+			},
+			{
+				"pagePath": "pages/add/index",
+				"text": "记账"
+			},
+			{
+				"pagePath": "pages/detail/index",
+				"text": "明细"
+			},
+			{
+				"pagePath": "pages/profile/index",
+				"text": "我的"
+			}
+		]
+	}
+}

@@ -1,0 +1,49 @@
+page {
+	--color-primary: #F6C445;
+	--color-primary-light: #FFD97A;
+	--color-gold: #FFB347;
+	--color-paw-pink: #F472B6;
+	--color-bg: #FFF8F0;
+	--color-bg-card: #FFFFFF;
+	--color-bg-gray: #F3F4F6;
+	--color-text-primary: #4A3728;
+	--color-text-secondary: #7C6955;
+	--color-text-muted: #9CA3AF;
+	--color-success: #34D399;
+	--color-warning: #FB923C;
+	--color-danger: #EF4444;
+	--color-border: #F0E6D9;
+
+	--radius-sm: 12rpx;
+	--radius-md: 24rpx;
+	--radius-lg: 48rpx;
+	--radius-xl: 64rpx;
+	--radius-full: 999rpx;
+
+	--shadow-card: 0 4rpx 16rpx rgba(74, 55, 40, 0.06);
+	--shadow-elevated: 0 8rpx 32rpx rgba(74, 55, 40, 0.12);
+
+	--font-family: 'Nunito', 'PingFang SC', 'HarmonyOS Sans', sans-serif;
+
+	--tabbar-height: 120rpx;
+}
+
+page.dark-mode {
+	--color-primary: #F6C445;
+	--color-primary-light: #FFD97A;
+	--color-gold: #FFB347;
+	--color-paw-pink: #F472B6;
+	--color-bg: #1A1A2E;
+	--color-bg-card: #2D2D44;
+	--color-bg-gray: #3D3D56;
+	--color-text-primary: #F5F5F5;
+	--color-text-secondary: #C8C8D0;
+	--color-text-muted: #8888A0;
+	--color-success: #34D399;
+	--color-warning: #FB923C;
+	--color-danger: #EF4444;
+	--color-border: #3D3D56;
+
+	--shadow-card: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
+	--shadow-elevated: 0 8rpx 32rpx rgba(0, 0, 0, 0.3);
+}
