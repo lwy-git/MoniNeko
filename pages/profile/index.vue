@@ -12,6 +12,7 @@
 					</view>
 				</view>
 				<view class="cat-info">
+					<text class="user-name">{{ userStore.nickname }}</text>
 					<text class="cat-name">{{ catStore.catName }}</text>
 					<view class="exp-row">
 						<view class="exp-bar">
@@ -64,6 +65,13 @@
 
 			<!-- 设置列表 -->
 			<view class="settings-card">
+				<view class="settings-item" @tap="goProfileEdit">
+					<view class="settings-left">
+						<text class="settings-icon settings-icon-gold">👤</text>
+						<text class="settings-label">个人信息</text>
+					</view>
+					<text class="settings-arrow">›</text>
+				</view>
 				<view class="settings-item">
 					<view class="settings-left">
 						<text class="settings-icon settings-icon-gold">☁️</text>
@@ -134,8 +142,16 @@ async function onExport() {
 		const sorted = records.sort((a, b) => b.expense_date.localeCompare(a.expense_date))
 		const csv = exportToCSV(sorted)
 		const filename = `招财记账_${new Date().toISOString().slice(0, 10)}.csv`
-		downloadCSV(csv, filename)
-		uni.showToast({ title: '导出成功喵~', icon: 'success' })
+		const result = await downloadCSV(csv, filename)
+		if (result?.shared === false) {
+			uni.showModal({
+				title: '导出成功',
+				content: `文件已保存到：${result.filePath}。如果文件管理器看不到，请在分享面板选择微信、WPS 或邮箱打开。`,
+				showCancel: false
+			})
+			return
+		}
+		uni.showToast({ title: result?.opened ? '已打开导出文件' : '导出成功喵~', icon: 'success' })
 	} catch (e) {
 		uni.showToast({ title: '导出失败', icon: 'none' })
 	}
@@ -147,6 +163,10 @@ function goShop() {
 
 function goAchievements() {
 	uni.navigateTo({ url: '/pages/achievements/index' })
+}
+
+function goProfileEdit() {
+	uni.navigateTo({ url: '/pages/profile-edit/index' })
 }
 
 function goWelcome() {
@@ -213,7 +233,14 @@ function goWelcome() {
 	flex: 1;
 }
 
+.user-name {
+	font-size: 24rpx;
+	font-weight: 700;
+	color: rgba(74, 55, 40, 0.7);
+}
+
 .cat-name {
+	display: block;
 	font-size: 36rpx;
 	font-weight: 800;
 	color: var(--color-text-primary);
@@ -324,7 +351,7 @@ function goWelcome() {
 
 /* 功能区 */
 .profile-body {
-	padding: 0 24rpx;
+	padding: 0 24rpx 220rpx;
 }
 
 .quick-grid {

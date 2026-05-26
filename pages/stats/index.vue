@@ -17,7 +17,7 @@
 			<cat-loading v-if="loading" />
 			<scroll-view v-else scroll-y class="stats-scroll">
 				<view v-if="periodTotal === 0" class="empty-state">
-					<text class="empty-icon">😿</text>
+					<image class="empty-icon" src="/static/icons/tabbar/baimao.svg"></image>
 					<text class="empty-text">这个月还没有消费记录喵~</text>
 					<text class="empty-sub">快去记一笔吧</text>
 				</view>
@@ -312,7 +312,8 @@ function goBack() {
 
 .stats-scroll {
 	flex: 1;
-	padding: 0 24rpx 32rpx;
+	padding: 0 24rpx 220rpx;
+	box-sizing: border-box;
 }
 
 /* 周期切换 */
@@ -322,6 +323,7 @@ function goBack() {
 	border-radius: var(--radius-full);
 	padding: 4rpx;
 	margin-bottom: 32rpx;
+	margin-right: 12rpx;
 }
 
 .period-item {
@@ -348,6 +350,7 @@ function goBack() {
 	box-shadow: var(--shadow-card);
 	margin-bottom: 24rpx;
 	text-align: center;
+	margin-right: 12rpx;
 }
 
 .total-label {
@@ -419,6 +422,7 @@ function goBack() {
 	padding: 40rpx;
 	box-shadow: var(--shadow-card);
 	margin-bottom: 24rpx;
+	margin-right:12rpx;
 }
 
 .trend-header {
@@ -497,6 +501,7 @@ function goBack() {
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: 16rpx;
+	margin-right: 12rpx;
 }
 
 .rank-left {

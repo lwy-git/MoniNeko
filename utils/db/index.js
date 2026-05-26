@@ -1,4 +1,5 @@
 import StorageAdapter from './storage-adapter.js'
+import SQLiteAdapter from './sqlite-adapter.js'
 
 let db = null
 
@@ -8,7 +9,6 @@ export function getDB() {
 
 export async function initDB() {
 	// #ifdef APP-PLUS
-	const { default: SQLiteAdapter } = await import('./sqlite-adapter.js')
 	db = new SQLiteAdapter()
 	// #endif
 

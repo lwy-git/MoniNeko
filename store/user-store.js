@@ -19,10 +19,20 @@ export const useUserStore = defineStore('user', () => {
 		userId.value = storedId
 		accountType.value = 'guest'
 
+		const storedNickname = uni.getStorageSync('nickname')
+		if (storedNickname) {
+			nickname.value = storedNickname
+		}
+
 		const storedDark = uni.getStorageSync('dark_mode')
 		if (storedDark !== '') {
 			darkMode.value = storedDark
 		}
+	}
+
+	function updateNickname(value) {
+		nickname.value = value
+		uni.setStorageSync('nickname', value)
 	}
 
 	function toggleDarkMode() {
@@ -38,6 +48,7 @@ export const useUserStore = defineStore('user', () => {
 		deviceId,
 		darkMode,
 		initGuestUser,
+		updateNickname,
 		toggleDarkMode
 	}
 })

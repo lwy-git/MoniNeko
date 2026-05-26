@@ -31,6 +31,12 @@
 			}
 		},
 		{
+			"path": "pages/profile-edit/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/splash/index",
 			"style": {
 				"navigationStyle": "custom"
@@ -107,7 +113,7 @@
 		"autoscan": true,
 		"custom": {
 			"^uni-(.*)": "@dcloudio/uni-components/lib/uni-$1/uni-$1.vue",
-			"^my-custom-tabbar": "@/components/custom-tab-bar/custom-tab-bar.vue"
+			"^my-custom-tabbar": "@/components/my-custom-tabbar/my-custom-tabbar.vue"
 		}
 	}
 }

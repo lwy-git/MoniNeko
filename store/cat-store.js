@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useCat } from '@/hooks/use-cat.js'
+import { useDailyTasks } from '@/hooks/use-daily-tasks.js'
 import { useAchievementDetector } from '@/hooks/use-achievement-detector.js'
 import { getLevelProgress, getUnlockedBreeds } from '@/utils/cat-level.js'
 import { CAT_BREED_EMOJI } from '@/config/constants.js'
@@ -14,8 +15,10 @@ export const useCatStore = defineStore('cat', () => {
 	const currentAccessory = ref('')
 	const lastCheckinDate = ref('')
 	const achievements = ref([])
+	const dailyTasks = ref([])
 
-	const { loadCatStatus, addFish, checkin, updateBreed, loadAchievements } = useCat()
+	const { loadCatStatus, addFish, checkin, updateBreed, updateCatName, loadAchievements } = useCat()
+	const { loadDailyTasks, claimDailyTask } = useDailyTasks()
 	const { checkAfterExpense, checkAfterBudget, checkUnderBudget } = useAchievementDetector()
 
 	const canCheckin = computed(() => lastCheckinDate.value !== getToday())
@@ -59,8 +62,29 @@ export const useCatStore = defineStore('cat', () => {
 		breed.value = breedKey
 	}
 
+	async function renameCat(userId, name) {
+		await updateCatName(userId, name)
+		catName.value = name
+	}
+
 	async function fetchAchievements(userId) {
 		achievements.value = await loadAchievements(userId)
+	}
+
+	async function fetchDailyTasks(userId) {
+		dailyTasks.value = await loadDailyTasks(userId)
+	}
+
+	async function claimTask(userId, taskKey) {
+		const result = await claimDailyTask(userId, taskKey)
+		if (!result.success) return result
+
+		dailyTasks.value = result.tasks
+		fishCount.value = result.newFish
+		if (result.leveled) {
+			level.value = result.newLevel
+		}
+		return result
 	}
 
 	async function checkAchievements(userId, trigger) {
@@ -85,6 +109,7 @@ export const useCatStore = defineStore('cat', () => {
 		currentAccessory,
 		lastCheckinDate,
 		achievements,
+		dailyTasks,
 		canCheckin,
 		levelProgress,
 		unlockedBreeds,
@@ -93,7 +118,10 @@ export const useCatStore = defineStore('cat', () => {
 		earnFish,
 		doCheckin,
 		changeBreed,
+		renameCat,
 		fetchAchievements,
+		fetchDailyTasks,
+		claimTask,
 		checkAchievements
 	}
 })

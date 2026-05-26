@@ -57,6 +57,15 @@ export function useCat() {
 		}
 	}
 
+	async function updateCatName(userId, catName) {
+		const db = getDB()
+		const results = await db.query('cat_status', (row) => row.user_id === userId)
+		if (results.length > 0) {
+			return await db.update('cat_status', results[0].id, { cat_name: catName })
+		}
+		return null
+	}
+
 	async function getRecordStreak(userId) {
 		const db = getDB()
 		const records = await db.query('expense_record', (row) => row.user_id === userId)
@@ -109,6 +118,7 @@ export function useCat() {
 		addFish,
 		checkin,
 		updateBreed,
+		updateCatName,
 		getRecordStreak,
 		loadAchievements,
 		unlockAchievement

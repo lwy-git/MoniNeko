@@ -28,6 +28,13 @@ export const ACHIEVEMENTS = {
 	SAVE_MASTER: { key: 'save_master', label: '省钱达人', description: '连续7天不超日均', fish: 5 }
 }
 
+export const DAILY_TASKS = [
+	{ key: 'daily_expense', label: '今日记一笔支出', description: '记录一次今天的支出', fish: 1, icon: '📝' },
+	{ key: 'daily_income', label: '今日记一笔收入', description: '记录一次今天的收入', fish: 1, icon: '💰' },
+	{ key: 'daily_budget', label: '设置本月预算', description: '本月已经给猫咪安排粮饷', fish: 2, icon: '🍚' },
+	{ key: 'daily_under_budget', label: '今日不超日均', description: '今天支出不超过本月日均预算', fish: 2, icon: '😺' }
+]
+
 export const BUDGET_PRESETS = [3000, 5000, 8000, 10000]
 
 export const CAT_BREEDS = [

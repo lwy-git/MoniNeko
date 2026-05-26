@@ -285,7 +285,8 @@ function goBack() {
 
 .timeline-scroll {
 	flex: 1;
-	padding: 0 24rpx 32rpx;
+	padding: 0 24rpx 220rpx;
+	box-sizing: border-box;
 }
 
 /* 搜索栏 */
@@ -345,6 +346,7 @@ function goBack() {
 /* 日期分组 */
 .day-group {
 	margin-bottom: 40rpx;
+	margin-right: 12rpx;
 }
 
 .day-header {

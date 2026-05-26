@@ -41,25 +41,54 @@ export function downloadCSV(csvContent, filename) {
 	link.download = filename
 	link.click()
 	URL.revokeObjectURL(url)
+	return Promise.resolve({ filePath: filename })
 	// #endif
 
 	// #ifdef APP-PLUS
-	const filePath = `_doc/${filename}`
-	plus.io.requestFileSystem(plus.io.PRIVATE_DOC, (fs) => {
-		fs.root.getFile(filePath, { create: true }, (fileEntry) => {
-			fileEntry.createWriter((writer) => {
-				writer.write(csvContent)
-				writer.onwrite = () => {
-					uni.shareFile({
-						filePath: fileEntry.toLocalURL(),
-						success() {},
-						fail() {
-							uni.showToast({ title: '导出成功，文件已保存', icon: 'none' })
-						}
-					})
+	return new Promise((resolve, reject) => {
+		const writeFile = (fsType, displayPath) => {
+			plus.io.requestFileSystem(fsType, (fs) => {
+				writeToDirectory(fs.root, displayPath)
+			}, () => {
+				if (fsType !== plus.io.PRIVATE_DOC) {
+					writeFile(plus.io.PRIVATE_DOC, `_doc/${filename}`)
+				} else {
+					reject(new Error('无法创建导出文件'))
 				}
 			})
-		})
+		}
+
+		const writeToDirectory = (dirEntry, displayPath) => {
+			dirEntry.getFile(filename, { create: true }, (fileEntry) => {
+				fileEntry.createWriter((writer) => {
+					writer.onwrite = () => {
+						const localUrl = fileEntry.toLocalURL()
+						plus.runtime.openFile(localUrl, {}, () => {
+							resolve({ filePath: displayPath, localUrl, opened: true })
+						}, () => {
+							shareExportFile(localUrl, filename, displayPath, resolve)
+						})
+					}
+					writer.onerror = (e) => reject(e)
+					writer.write(csvContent)
+				}, reject)
+			}, reject)
+		}
+
+		writeFile(plus.io.PUBLIC_DOWNLOADS, `Download/${filename}`)
 	})
 	// #endif
+}
+
+function shareExportFile(localUrl, filename, filePath, resolve) {
+	plus.share.sendWithSystem(
+		{
+			type: 'file',
+			title: filename,
+			content: '招财记账数据导出',
+			files: [localUrl]
+		},
+		() => resolve({ filePath, localUrl, shared: true }),
+		() => resolve({ filePath, localUrl, shared: false })
+	)
 }

@@ -253,7 +253,7 @@ function goReport() {
 }
 
 .page-content {
-	padding: 0 24rpx;
+	padding: 0 24rpx 220rpx;
 }
 
 .header {

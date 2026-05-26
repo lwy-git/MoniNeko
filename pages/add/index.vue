@@ -327,8 +327,9 @@ function goBack() {
 .keyboard {
 	display: flex;
 	gap: 12rpx;
-	margin-top: auto;
+	margin-top: 32rpx;
 	padding-bottom: 32rpx;
+	flex-shrink: 0;
 }
 
 .keyboard-main {
