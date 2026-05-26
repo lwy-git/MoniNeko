@@ -3,12 +3,12 @@
 		<view class="page-content anim-fade-in">
 			<!-- 顶部：取消 / 支出收入切换 / 完成 -->
 			<view class="header">
-				<text class="cancel-btn" @tap="goBack">取消</text>
+				<text class="cancel-btn" @tap="goBack">{{ isEditMode ? '返回' : '取消' }}</text>
 				<view class="type-switch">
 					<text :class="['type-item', { 'type-active': isExpense }]" @tap="isExpense = true">支出</text>
 					<text :class="['type-item', { 'type-active': !isExpense }]" @tap="isExpense = false">收入</text>
 				</view>
-				<text class="done-btn" @tap="onSubmit">完成</text>
+				<text class="done-btn" @tap="onSubmit">{{ isEditMode ? '保存' : '完成' }}</text>
 			</view>
 
 			<!-- 金额显示 -->
@@ -71,10 +71,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useExpenseStore } from '@/store/expense-store.js'
 import { useUserStore } from '@/store/user-store.js'
-import { CATEGORIES } from '@/config/constants.js'
+import { CATEGORIES, INCOME_CATEGORIES } from '@/config/constants.js'
 import { getToday, getCurrentTime } from '@/utils/helpers.js'
 
 const expenseStore = useExpenseStore()
@@ -85,8 +86,30 @@ const selectedCategory = ref(0)
 const amountStr = ref('')
 const remark = ref('')
 const shaking = ref(false)
+const isEditMode = computed(() => !!expenseStore.editingRecord)
 
-const categories = CATEGORIES
+const categories = computed(() => isExpense.value ? CATEGORIES : INCOME_CATEGORIES)
+
+watch(isExpense, () => {
+	selectedCategory.value = 0
+})
+
+onShow(() => {
+	const record = expenseStore.editingRecord
+	if (record) {
+		isExpense.value = record.type !== 'income'
+		amountStr.value = String(record.amount)
+		remark.value = record.remark || ''
+		const catList = record.type === 'income' ? INCOME_CATEGORIES : CATEGORIES
+		const catIdx = catList.findIndex(c => c.key === record.category)
+		selectedCategory.value = catIdx >= 0 ? catIdx : 0
+	} else {
+		isExpense.value = true
+		amountStr.value = ''
+		remark.value = ''
+		selectedCategory.value = 0
+	}
+})
 
 const displayAmount = computed(() => {
 	if (!amountStr.value) return '0.00'
@@ -116,33 +139,47 @@ async function onSubmit() {
 		return
 	}
 
-	const cat = categories[selectedCategory.value]
-	const record = {
-		user_id: userStore.userId,
-		type: isExpense.value ? 'expense' : 'income',
-		category: cat.key,
-		item_name: remark.value || cat.label,
-		amount,
-		expense_date: getToday(),
-		expense_time: getCurrentTime(),
-		remark: remark.value || ''
-	}
+	const cat = categories.value[selectedCategory.value]
 
 	try {
-		await expenseStore.createExpense(record)
-		uni.showToast({ title: '记账成功喵~', icon: 'success' })
-		amountStr.value = ''
-		remark.value = ''
-		selectedCategory.value = 0
-		setTimeout(() => {
-			uni.switchTab({ url: '/pages/home/index' })
-		}, 500)
+		if (isEditMode.value) {
+			await expenseStore.editExpense(expenseStore.editingRecord.id, {
+				type: isExpense.value ? 'expense' : 'income',
+				category: cat.key,
+				item_name: remark.value || cat.label,
+				amount,
+				remark: remark.value || ''
+			})
+			uni.showToast({ title: '修改成功喵~', icon: 'success' })
+			expenseStore.clearEditingRecord()
+			setTimeout(() => { uni.switchTab({ url: '/pages/detail/index' }) }, 500)
+		} else {
+			const record = {
+				user_id: userStore.userId,
+				type: isExpense.value ? 'expense' : 'income',
+				category: cat.key,
+				item_name: remark.value || cat.label,
+				amount,
+				expense_date: getToday(),
+				expense_time: getCurrentTime(),
+				remark: remark.value || ''
+			}
+			await expenseStore.createExpense(record)
+			uni.showToast({ title: '记账成功喵~', icon: 'success' })
+			amountStr.value = ''
+			remark.value = ''
+			selectedCategory.value = 0
+			setTimeout(() => { uni.switchTab({ url: '/pages/home/index' }) }, 500)
+		}
 	} catch (e) {
-		uni.showToast({ title: '记账失败', icon: 'none' })
+		uni.showToast({ title: isEditMode.value ? '修改失败' : '记账失败', icon: 'none' })
 	}
 }
 
 function goBack() {
+	if (isEditMode.value) {
+		expenseStore.clearEditingRecord()
+	}
 	uni.switchTab({ url: '/pages/home/index' })
 }
 </script>

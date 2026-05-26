@@ -33,7 +33,7 @@
 ### 5. 页面 UI 骨架
 
 - 9 个页面 UI 实现（splash、welcome、home、add、detail、stats、budget、report、profile）
-- 自定义 TabBar 组件（custom-tab-bar）
+- 自定义 TabBar 组件（my-custom-tabbar）
 - 全局样式系统（theme.scss、animation.scss）
 - 猫爪加载组件（cat-loading）
 

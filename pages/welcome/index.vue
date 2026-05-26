@@ -2,7 +2,7 @@
 	<view class="page-welcome">
 		<view class="welcome-top">
 			<view class="welcome-illustration">
-				<text class="welcome-cat">😻</text>
+				<image class="welcome-cat-img" src="/static/icons/tabbar/jumao.svg" mode="aspectFit"></image>
 			</view>
 		</view>
 
@@ -80,8 +80,9 @@ function enterAsGuest() {
 	box-shadow: var(--shadow-elevated);
 }
 
-.welcome-cat {
-	font-size: 140rpx;
+.welcome-cat-img {
+	width: 160rpx;
+	height: 160rpx;
 }
 
 .welcome-card {

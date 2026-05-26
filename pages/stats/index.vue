@@ -6,29 +6,32 @@
 				<view class="header-back" @tap="goBack">
 					<text class="back-icon">‹</text>
 				</view>
-				<text class="page-title">收支统计</text>
+				<view class="month-nav">
+					<text class="month-arrow-btn" @tap="prevMonth">‹</text>
+					<text class="month-text" @tap="resetMonth">{{ displayMonth }}</text>
+					<text class="month-arrow-btn" @tap="nextMonth">›</text>
+				</view>
 				<view class="header-placeholder"></view>
 			</view>
 
 			<cat-loading v-if="loading" />
 			<scroll-view v-else scroll-y class="stats-scroll">
-				<view v-if="expenseStore.monthTotal === 0" class="empty-state">
+				<view v-if="periodTotal === 0" class="empty-state">
 					<text class="empty-icon">😿</text>
 					<text class="empty-text">这个月还没有消费记录喵~</text>
 					<text class="empty-sub">快去记一笔吧</text>
 				</view>
 				<view v-else>
-				<!-- 周/月/年切换 -->
+				<!-- 周/月切换 -->
 				<view class="period-switch">
 					<text :class="['period-item', { 'period-active': currentPeriod === 'week' }]" @tap="currentPeriod = 'week'">周</text>
 					<text :class="['period-item', { 'period-active': currentPeriod === 'month' }]" @tap="currentPeriod = 'month'">月</text>
-					<text :class="['period-item', { 'period-active': currentPeriod === 'year' }]" @tap="currentPeriod = 'year'">年</text>
 				</view>
 
 				<!-- 总支出卡片 -->
 				<view class="total-card">
 					<text class="total-label">总支出</text>
-					<text class="total-amount">¥ {{ formatAmount(expenseStore.monthTotal) }}</text>
+					<text class="total-amount">¥ {{ formatAmount(periodTotal) }}</text>
 					<!-- 饼图占位 -->
 					<view class="chart-placeholder">
 						<view class="pie-mock" :style="{ background: pieGradient }"></view>
@@ -74,7 +77,7 @@
 				</view>
 			</scroll-view>
 		</view>
-		<custom-tab-bar :current="1" />
+		<my-custom-tabbar :current="1" />
 	</view>
 </template>
 
@@ -83,45 +86,105 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useExpenseStore } from '@/store/expense-store.js'
 import { useUserStore } from '@/store/user-store.js'
-import { CATEGORIES } from '@/config/constants.js'
-import { getCurrentYearMonth } from '@/utils/helpers.js'
+import { CATEGORIES, INCOME_CATEGORIES } from '@/config/constants.js'
+import { useExpense } from '@/hooks/use-expense.js'
 
 const expenseStore = useExpenseStore()
 const userStore = useUserStore()
+const { loadByMonth } = useExpense()
 const loading = ref(false)
 
-const currentPeriod = ref('week')
+const currentPeriod = ref('month')
+const statsYear = ref(new Date().getFullYear())
+const statsMonth = ref(new Date().getMonth() + 1)
+const statsExpenses = ref([])
 
 const categoryMap = {}
 CATEGORIES.forEach(c => { categoryMap[c.key] = c })
+INCOME_CATEGORIES.forEach(c => { categoryMap[c.key] = c })
 
-onShow(async () => {
+const statsYearMonth = computed(() =>
+	`${statsYear.value}-${String(statsMonth.value).padStart(2, '0')}`
+)
+
+const displayMonth = computed(() => `${statsMonth.value}月`)
+
+function prevMonth() {
+	if (statsMonth.value === 1) {
+		statsMonth.value = 12
+		statsYear.value--
+	} else {
+		statsMonth.value--
+	}
+	loadStatsData()
+}
+
+function nextMonth() {
+	const now = new Date()
+	const nowYear = now.getFullYear()
+	const nowMonth = now.getMonth() + 1
+	if (statsYear.value === nowYear && statsMonth.value >= nowMonth) return
+	if (statsMonth.value === 12) {
+		statsMonth.value = 1
+		statsYear.value++
+	} else {
+		statsMonth.value++
+	}
+	loadStatsData()
+}
+
+function resetMonth() {
+	const now = new Date()
+	statsYear.value = now.getFullYear()
+	statsMonth.value = now.getMonth() + 1
+	loadStatsData()
+}
+
+async function loadStatsData() {
 	loading.value = true
-	const yearMonth = getCurrentYearMonth()
-	await expenseStore.fetchByMonth(userStore.userId, yearMonth)
+	statsExpenses.value = await loadByMonth(userStore.userId, statsYearMonth.value)
 	loading.value = false
+}
+
+onShow(() => {
+	loadStatsData()
 })
 
+const expenseRecords = computed(() =>
+	statsExpenses.value.filter(e => e.type !== 'income')
+)
+
+const periodExpenses = computed(() => {
+	if (currentPeriod.value === 'week') {
+		const now = new Date()
+		const weekAgo = new Date(now)
+		weekAgo.setDate(weekAgo.getDate() - 6)
+		const weekAgoStr = `${weekAgo.getFullYear()}-${String(weekAgo.getMonth() + 1).padStart(2, '0')}-${String(weekAgo.getDate()).padStart(2, '0')}`
+		return expenseRecords.value.filter(e => e.expense_date >= weekAgoStr)
+	}
+	return expenseRecords.value
+})
+
+const periodTotal = computed(() =>
+	periodExpenses.value.reduce((sum, e) => sum + e.amount, 0)
+)
+
 const categoryStats = computed(() => {
-	const total = expenseStore.monthTotal
-	if (total === 0) return []
+	if (periodTotal.value === 0) return []
 
 	const grouped = {}
-	expenseStore.monthExpenses.forEach(e => {
-		if (e.type === 'income') return
+	periodExpenses.value.forEach(e => {
 		const key = e.category || 'other'
 		grouped[key] = (grouped[key] || 0) + e.amount
 	})
 
-	const sorted = Object.entries(grouped)
+	return Object.entries(grouped)
 		.map(([key, amount]) => {
 			const cat = categoryMap[key] || { label: '其他', color: '#9CA3AF', icon: '🐾' }
-			return { key, label: cat.label, icon: cat.icon, color: cat.color, amount, percent: Math.round((amount / total) * 100) }
+			return { key, label: cat.label, icon: cat.icon, color: cat.color, amount, percent: Math.round((amount / periodTotal.value) * 100) }
 		})
 		.sort((a, b) => b.amount - a.amount)
 		.slice(0, 5)
-
-	return sorted
 })
 
 const pieGradient = computed(() => {
@@ -147,8 +210,8 @@ const trendData = computed(() => {
 		const d = new Date(now)
 		d.setDate(d.getDate() - i)
 		const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-		const dayTotal = expenseStore.monthExpenses
-			.filter(e => e.expense_date === dateStr && e.type !== 'income')
+		const dayTotal = expenseRecords.value
+			.filter(e => e.expense_date === dateStr)
 			.reduce((sum, e) => sum + e.amount, 0)
 		dailyTotals.push({ day: days[d.getDay() === 0 ? 6 : d.getDay() - 1], amount: dayTotal })
 	}
@@ -216,6 +279,29 @@ function goBack() {
 
 .header-placeholder {
 	width: 72rpx;
+}
+
+.month-nav {
+	display: flex;
+	align-items: center;
+	gap: 16rpx;
+}
+
+.month-arrow-btn {
+	width: 48rpx;
+	height: 48rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 36rpx;
+	color: var(--color-text-primary);
+	font-weight: 700;
+}
+
+.month-text {
+	font-size: 32rpx;
+	font-weight: 700;
+	color: var(--color-text-primary);
 }
 
 .page-title {

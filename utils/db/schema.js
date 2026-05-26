@@ -37,7 +37,7 @@ export const TABLES = {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id TEXT NOT NULL UNIQUE,
 		cat_name TEXT DEFAULT '招财',
-		breed TEXT DEFAULT '橘猫',
+		breed TEXT DEFAULT 'orange',
 		current_fish INTEGER DEFAULT 0,
 		current_level INTEGER DEFAULT 1,
 		current_accessory TEXT DEFAULT '',

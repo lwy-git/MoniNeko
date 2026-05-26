@@ -7,7 +7,7 @@
 
 				<!-- 猫咪 -->
 				<view class="report-cat">
-					<text class="report-cat-emoji">😻</text>
+					<image class="report-cat-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
 				</view>
 
 				<!-- 猫咪对话气泡 -->
@@ -45,11 +45,13 @@ import { onShow } from '@dcloudio/uni-app'
 import { useExpenseStore } from '@/store/expense-store.js'
 import { useBudgetStore } from '@/store/budget-store.js'
 import { useUserStore } from '@/store/user-store.js'
+import { useCatStore } from '@/store/cat-store.js'
 import { getToday, getRemainingDays, getCurrentYearMonth } from '@/utils/helpers.js'
 
 const expenseStore = useExpenseStore()
 const budgetStore = useBudgetStore()
 const userStore = useUserStore()
+const catStore = useCatStore()
 
 onShow(async () => {
 	const today = getToday()
@@ -67,9 +69,9 @@ const budgetRemain = computed(() => budgetStore.budgetAmount - expenseStore.mont
 const suggestion = computed(() => {
 	const remain = budgetRemain.value
 	const days = getRemainingDays()
-	if (remain <= 0) return '"预算已经超支了喵...要注意控制开销哦 🙀"'
+	if (remain <= 0) return '"预算已经超支了喵...要注意控制开销哦"'
 	const dailyBudget = Math.round(remain / days)
-	return `"建议每天花费不超过 ¥${dailyBudget}，就能安全到月底喵 🐟！"`
+	return `"建议每天花费不超过 ¥${dailyBudget}，就能安全到月底喵！"`
 })
 
 function formatAmount(val) {
@@ -125,8 +127,9 @@ function goBack() {
 	margin-bottom: 32rpx;
 }
 
-.report-cat-emoji {
-	font-size: 120rpx;
+.report-cat-img {
+	width: 120rpx;
+	height: 120rpx;
 }
 
 .chat-bubble {

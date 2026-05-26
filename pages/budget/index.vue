@@ -64,6 +64,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useBudgetStore } from '@/store/budget-store.js'
 import { useUserStore } from '@/store/user-store.js'
 import { getCurrentYearMonth } from '@/utils/helpers.js'
@@ -72,14 +73,21 @@ const budgetStore = useBudgetStore()
 const userStore = useUserStore()
 
 const budgetAmount = ref(4000)
+const targetYearMonth = ref(getCurrentYearMonth())
 
 const categoryBudgets = ref([
 	{ icon: '🍔', name: '餐饮预算', amount: 1500 },
 	{ icon: '🛍', name: '购物预算', amount: 1000 }
 ])
 
+onLoad((options) => {
+	if (options.yearMonth) {
+		targetYearMonth.value = options.yearMonth
+	}
+})
+
 onMounted(async () => {
-	await budgetStore.fetchCurrentBudget(userStore.userId)
+	await budgetStore.fetchBudgetByMonth(userStore.userId, targetYearMonth.value)
 	if (budgetStore.hasBudget) {
 		budgetAmount.value = budgetStore.budgetAmount
 	}
@@ -90,12 +98,11 @@ function onSliderChange(e) {
 }
 
 async function onSave() {
-	const yearMonth = getCurrentYearMonth()
 	try {
 		if (budgetStore.hasBudget) {
 			await budgetStore.modifyBudget(budgetStore.currentBudget.id, budgetAmount.value)
 		} else {
-			await budgetStore.setBudget(userStore.userId, yearMonth, budgetAmount.value)
+			await budgetStore.setBudget(userStore.userId, targetYearMonth.value, budgetAmount.value)
 		}
 		uni.showToast({ title: '预算设置成功喵~', icon: 'success' })
 		setTimeout(() => { uni.navigateBack() }, 500)

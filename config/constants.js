@@ -9,6 +9,15 @@ export const CATEGORIES = [
 	{ key: 'other', label: '其他', icon: '🐾', color: '#9CA3AF' }
 ]
 
+export const INCOME_CATEGORIES = [
+	{ key: 'salary', label: '工资', icon: '💰', color: '#34D399' },
+	{ key: 'bonus', label: '奖金', icon: '🎁', color: '#F6C445' },
+	{ key: 'invest', label: '理财', icon: '📈', color: '#3B82F6' },
+	{ key: 'parttime', label: '兼职', icon: '💼', color: '#8B5CF6' },
+	{ key: 'redpacket', label: '红包', icon: '🧧', color: '#EF4444' },
+	{ key: 'other_income', label: '其他', icon: '🐾', color: '#9CA3AF' }
+]
+
 export const ACHIEVEMENTS = {
 	FIRST_BUDGET: { key: 'first_budget', label: '首次设置预算', description: '给猫咪分配第一笔粮饷', fish: 2 },
 	FIRST_EXPENSE: { key: 'first_expense', label: '首次记账', description: '第一次投喂猫咪金币', fish: 1 },
@@ -28,8 +37,15 @@ export const CAT_BREEDS = [
 	{ key: 'black', label: '黑猫', unlockLevel: 15 }
 ]
 
+export const CAT_BREED_EMOJI = {
+	orange: '/static/icons/tabbar/jumao.svg',
+	british_short: '/static/icons/tabbar/lanmao.svg',
+	ragdoll: '/static/icons/tabbar/buoumao.svg',
+	black: '/static/icons/tabbar/heimao.svg'
+}
+
 export const BUDGET_STATUS = {
-	GOOD: { key: 'good', label: '节奏良好', color: '#34D399', catFace: '😸' },
-	WARNING: { key: 'warning', label: '节奏偏快', color: '#FB923C', catFace: '😐' },
-	DANGER: { key: 'danger', label: '严重超支', color: '#EF4444', catFace: '🙀' }
+	GOOD: { key: 'good', label: '节奏良好', color: '#34D399' },
+	WARNING: { key: 'warning', label: '节奏偏快', color: '#FB923C' },
+	DANGER: { key: 'danger', label: '严重超支', color: '#EF4444' }
 }

@@ -3,7 +3,7 @@
 		<view class="splash-bg">
 			<view class="glow-ring"></view>
 			<view class="cat-face anim-float">
-				<text class="cat-emoji">😺</text>
+				<image class="cat-img" src="/static/icons/tabbar/jumao.svg" mode="aspectFit"></image>
 			</view>
 		</view>
 		<view class="splash-info">
@@ -78,8 +78,9 @@ function goWelcome() {
 	box-shadow: 0 0 60rpx rgba(246, 196, 69, 0.6);
 }
 
-.cat-emoji {
-	font-size: 120rpx;
+.cat-img {
+	width: 120rpx;
+	height: 120rpx;
 }
 
 .splash-info {

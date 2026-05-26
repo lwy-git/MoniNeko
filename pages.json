@@ -53,6 +53,12 @@
 			"style": {
 				"navigationStyle": "custom"
 			}
+		},
+		{
+			"path": "pages/achievements/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
 		}
 	],
 	"globalStyle": {
@@ -72,24 +78,36 @@
 		"list": [
 			{
 				"pagePath": "pages/home/index",
-				"text": "首页"
+				"text": "首页",
+				"iconPath": "static/icons/tabbar/baimao.svg"
 			},
 			{
 				"pagePath": "pages/stats/index",
-				"text": "统计"
+				"text": "统计",
+				"iconPath": "static/icons/tabbar/buoumao.svg"
 			},
 			{
 				"pagePath": "pages/add/index",
-				"text": "记账"
+				"text": "记账",
+				"iconPath": "static/icons/tabbar/sanhuamao.svg"
 			},
 			{
 				"pagePath": "pages/detail/index",
-				"text": "明细"
+				"text": "明细",
+				"iconPath": "static/icons/tabbar/jumao.svg"
 			},
 			{
 				"pagePath": "pages/profile/index",
-				"text": "我的"
+				"text": "我的",
+				"iconPath": "static/icons/tabbar/lanmao.svg"
 			}
 		]
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^uni-(.*)": "@dcloudio/uni-components/lib/uni-$1/uni-$1.vue",
+			"^my-custom-tabbar": "@/components/custom-tab-bar/custom-tab-bar.vue"
+		}
 	}
 }

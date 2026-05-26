@@ -27,18 +27,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **平台适配**：使用 uni-app 条件编译（`#ifdef APP-PLUS` / `#ifndef APP-PLUS`），原生端用 SQLite，H5/小程序用 localStorage 降级。
 
-**导航**：自定义 TabBar 组件（easycom 自动注册为 `<custom-tab-bar>`）。Tab 页跳转用 `uni.switchTab`，子页面用 `uni.navigateTo`。
+**导航**：自定义 TabBar 组件（easycom 自动注册为 `<my-custom-tabbar>`）。Tab 页跳转用 `uni.switchTab`，子页面用 `uni.navigateTo`。
 
 **启动流程**：App 启动 → home（tabBar 首页）→ 首次启动 navigateTo splash → 点击按钮 redirectTo welcome → 点击"立即体验" → switchTab 回 home。
 
 ## 开发规范（详见 docs/开发规范.md）
 
 - **统一 Vue3 script setup**，禁用选项式 API
-- **文件命名**：严格 kebab-case（如 `user-store.js`、`use-budget.js`、`custom-tab-bar.vue`）
+- **文件命名**：严格 kebab-case（如 `user-store.js`、`use-budget.js`、`my-custom-tabbar.vue`）
 - **组件超 300 行必须拆分**为 SFC + hooks
 - **单位**：使用 `rpx`，不用 `px`
 - **样式**：必须 scoped；颜色用 CSS 变量，不写固定色值
-- **组件注册**：easycom 自动注册，template 中用 kebab-case 标签（如 `<custom-tab-bar>`）
+- **组件注册**：easycom 自动注册，template 中用 kebab-case 标签（如 `<my-custom-tabbar>`）
 - **路径别名**：`@/` 指向项目根目录
 - **禁止**：原生 DOM/BOM 操作、行内样式、v-for 与 v-if 同级
 

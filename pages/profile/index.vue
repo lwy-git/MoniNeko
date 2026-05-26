@@ -5,21 +5,45 @@
 			<view class="profile-info">
 				<view class="cat-avatar-wrap">
 					<view class="cat-avatar">
-						<text class="cat-emoji">😺</text>
+						<image class="cat-emoji-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
 					</view>
 					<view class="level-badge">
-						<text class="level-text">Lv.5</text>
+						<text class="level-text">Lv.{{ catStore.level }}</text>
 					</view>
 				</view>
 				<view class="cat-info">
-					<text class="cat-name">招财小金喵</text>
+					<text class="cat-name">{{ catStore.catName }}</text>
 					<view class="exp-row">
 						<view class="exp-bar">
-							<view class="exp-fill" style="width: 75%"></view>
+							<view class="exp-fill" :style="{ width: catStore.levelProgress.percent + '%' }"></view>
 						</view>
-						<text class="exp-percent">75%</text>
+						<text class="exp-percent">{{ catStore.levelProgress.percent }}%</text>
 					</view>
-					<text class="cat-tip">再记账3次即可升级喵~</text>
+					<text class="cat-tip">🐟 {{ catStore.fishCount }} · 还需{{ catStore.levelProgress.needed - catStore.levelProgress.current }}条鱼升级</text>
+				</view>
+			</view>
+
+			<!-- 签到按钮 -->
+			<view v-if="catStore.canCheckin" class="checkin-btn" @tap="onCheckin">
+				<text class="checkin-btn-text">签到 +1🐟</text>
+			</view>
+			<view v-else class="checkin-done">
+				<text class="checkin-done-text">今日已签到 ✓</text>
+			</view>
+		</view>
+
+		<!-- 品种切换 -->
+		<view class="breed-section" v-if="catStore.unlockedBreeds.length > 1">
+			<text class="breed-title">切换猫咪</text>
+			<view class="breed-list">
+				<view
+					v-for="b in catStore.unlockedBreeds"
+					:key="b.key"
+					:class="['breed-item', { 'breed-active': catStore.breed === b.key }]"
+					@tap="onChangeBreed(b.key)"
+				>
+					<image class="breed-emoji-img" :src="breedEmojiMap[b.key]" mode="aspectFit"></image>
+					<text class="breed-label">{{ b.label }}</text>
 				</view>
 			</view>
 		</view>
@@ -47,7 +71,7 @@
 					</view>
 					<text class="settings-arrow">›</text>
 				</view>
-				<view class="settings-item">
+				<view class="settings-item" @tap="onExport">
 					<view class="settings-left">
 						<text class="settings-icon settings-icon-green">📤</text>
 						<text class="settings-label">导出数据</text>
@@ -69,17 +93,60 @@
 			</view>
 		</view>
 
-		<custom-tab-bar :current="4" />
+		<my-custom-tabbar :current="4" />
 	</view>
 </template>
 
 <script setup>
+import { onShow } from '@dcloudio/uni-app'
+import { useUserStore } from '@/store/user-store.js'
+import { useCatStore } from '@/store/cat-store.js'
+import { CAT_BREED_EMOJI } from '@/config/constants.js'
+import { exportToCSV, downloadCSV } from '@/utils/export.js'
+import { getDB } from '@/utils/db/index.js'
+
+const userStore = useUserStore()
+const catStore = useCatStore()
+const breedEmojiMap = CAT_BREED_EMOJI
+
+onShow(async () => {
+	await catStore.fetchCatStatus(userStore.userId)
+	await catStore.fetchAchievements(userStore.userId)
+})
+
+async function onCheckin() {
+	await catStore.doCheckin(userStore.userId)
+	uni.showToast({ title: '签到成功 +1🐟', icon: 'none' })
+}
+
+function onChangeBreed(breedKey) {
+	catStore.changeBreed(userStore.userId, breedKey)
+}
+
+async function onExport() {
+	try {
+		const db = getDB()
+		const records = await db.query('expense_record', (r) => r.user_id === userStore.userId)
+		if (!records.length) {
+			uni.showToast({ title: '暂无数据可导出喵~', icon: 'none' })
+			return
+		}
+		const sorted = records.sort((a, b) => b.expense_date.localeCompare(a.expense_date))
+		const csv = exportToCSV(sorted)
+		const filename = `招财记账_${new Date().toISOString().slice(0, 10)}.csv`
+		downloadCSV(csv, filename)
+		uni.showToast({ title: '导出成功喵~', icon: 'success' })
+	} catch (e) {
+		uni.showToast({ title: '导出失败', icon: 'none' })
+	}
+}
+
 function goShop() {
-	// V1.1
+	uni.showToast({ title: '装扮商店即将开放喵~', icon: 'none' })
 }
 
 function goAchievements() {
-	// V1.1
+	uni.navigateTo({ url: '/pages/achievements/index' })
 }
 
 function goWelcome() {
@@ -121,8 +188,9 @@ function goWelcome() {
 	border: 4rpx solid var(--color-bg-card);
 }
 
-.cat-emoji {
-	font-size: 64rpx;
+.cat-emoji-img {
+	width: 80rpx;
+	height: 80rpx;
 }
 
 .level-badge {
@@ -182,6 +250,76 @@ function goWelcome() {
 	font-size: 20rpx;
 	color: rgba(74, 55, 40, 0.6);
 	margin-top: 8rpx;
+}
+
+.checkin-btn {
+	margin-top: 24rpx;
+	background: var(--color-bg-card);
+	border-radius: var(--radius-full);
+	padding: 16rpx 32rpx;
+	text-align: center;
+	box-shadow: var(--shadow-card);
+}
+
+.checkin-btn-text {
+	font-size: 26rpx;
+	font-weight: 700;
+	color: var(--color-primary);
+}
+
+.checkin-done {
+	margin-top: 24rpx;
+	padding: 16rpx 32rpx;
+	text-align: center;
+}
+
+.checkin-done-text {
+	font-size: 24rpx;
+	color: rgba(74, 55, 40, 0.4);
+}
+
+/* 品种切换 */
+.breed-section {
+	padding: 0 24rpx;
+	margin-bottom: 24rpx;
+}
+
+.breed-title {
+	font-size: 24rpx;
+	font-weight: 700;
+	color: var(--color-text-muted);
+	margin-bottom: 16rpx;
+}
+
+.breed-list {
+	display: flex;
+	gap: 20rpx;
+}
+
+.breed-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8rpx;
+	padding: 16rpx 24rpx;
+	background: var(--color-bg-card);
+	border-radius: 32rpx;
+	border: 4rpx solid transparent;
+}
+
+.breed-active {
+	border-color: var(--color-primary);
+}
+
+.breed-emoji-img {
+	width: 48rpx;
+	height: 48rpx;
+}
+
+.breed-label {
+	font-size: 20rpx;
+	font-weight: 700;
+	color: var(--color-text-primary);
 }
 
 /* 功能区 */

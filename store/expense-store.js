@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useExpense } from '@/hooks/use-expense.js'
+import { useCatStore } from '@/store/cat-store.js'
 
 export const useExpenseStore = defineStore('expense', () => {
 	const todayExpenses = ref([])
 	const monthExpenses = ref([])
 	const selectedDate = ref('')
+	const editingRecord = ref(null)
 	const { loadByDate, loadByMonth, addExpense, deleteExpense, updateExpense } = useExpense()
 
 	const todayTotal = computed(() =>
@@ -33,6 +35,13 @@ export const useExpenseStore = defineStore('expense', () => {
 		const newRecord = await addExpense(record)
 		todayExpenses.value.push(newRecord)
 		monthExpenses.value.push(newRecord)
+
+		if (record.type !== 'income') {
+			const catStore = useCatStore()
+			await catStore.earnFish(record.user_id, 1)
+			await catStore.checkAchievements(record.user_id, 'expense')
+		}
+
 		return newRecord
 	}
 
@@ -51,16 +60,27 @@ export const useExpenseStore = defineStore('expense', () => {
 		return updated
 	}
 
+	function setEditingRecord(record) {
+		editingRecord.value = record
+	}
+
+	function clearEditingRecord() {
+		editingRecord.value = null
+	}
+
 	return {
 		todayExpenses,
 		monthExpenses,
 		selectedDate,
+		editingRecord,
 		todayTotal,
 		monthTotal,
 		fetchByDate,
 		fetchByMonth,
 		createExpense,
 		removeExpense,
-		editExpense
+		editExpense,
+		setEditingRecord,
+		clearEditingRecord
 	}
 })

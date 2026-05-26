@@ -69,7 +69,7 @@ Phase 1-A 已完成基础架构。所有页面使用硬编码 mock 数据，没�
 - 修复 `monthTotal`/`todayTotal` 未过滤 income 类型
 - 修复 `expense_record` schema 缺少 `type` 字段
 - 修复记账页缺少 `item_name` 字段
-- 恢复被注释的 `custom-tab-bar` 组件引用
+- 恢复被注释的 `my-custom-tabbar` 组件引用
 
 ## 验证清单
 

@@ -11,7 +11,7 @@
 					<text class="month-arrow-btn" @tap="nextMonth">›</text>
 				</view>
 				<view class="avatar-wrap" @tap="goProfile">
-					<text class="avatar-emoji">😺</text>
+					<image class="avatar-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
 				</view>
 			</view>
 
@@ -34,7 +34,7 @@
 					</view>
 					<view class="budget-bottom">
 						<view class="cat-status">
-							<text class="cat-status-icon">{{ catStatus.catFace }}</text>
+							<image class="cat-status-icon" :src="catStore.breedEmoji" mode="aspectFit"></image>
 							<text class="cat-status-text">{{ catStatus.label }}喵~</text>
 						</view>
 						<view class="budget-btn" @tap="goBudget">
@@ -87,10 +87,10 @@
 
 		<!-- 悬浮招财猫 -->
 		<view class="floating-cat" @tap="goReport">
-			<text class="floating-cat-emoji">😸</text>
+			<image class="floating-cat-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
 		</view>
 
-		<custom-tab-bar :current="0" />
+		<my-custom-tabbar :current="0" />
 	</view>
 </template>
 
@@ -100,11 +100,13 @@ import { onShow } from '@dcloudio/uni-app'
 import { useExpenseStore } from '@/store/expense-store.js'
 import { useBudgetStore } from '@/store/budget-store.js'
 import { useUserStore } from '@/store/user-store.js'
+import { useCatStore } from '@/store/cat-store.js'
 import { BUDGET_STATUS } from '@/config/constants.js'
 
 const expenseStore = useExpenseStore()
 const budgetStore = useBudgetStore()
 const userStore = useUserStore()
+const catStore = useCatStore()
 const loading = ref(false)
 
 onShow(async () => {
@@ -115,6 +117,7 @@ onShow(async () => {
 	}
 	loading.value = true
 	await loadMonthData()
+	await catStore.fetchCatStatus(userStore.userId)
 	loading.value = false
 })
 
@@ -126,7 +129,7 @@ async function loadMonthData() {
 	const ym = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}`
 	await Promise.all([
 		expenseStore.fetchByMonth(userStore.userId, ym),
-		budgetStore.fetchCurrentBudget(userStore.userId)
+		budgetStore.fetchBudgetByMonth(userStore.userId, ym)
 	])
 }
 
@@ -225,7 +228,8 @@ function goProfile() {
 }
 
 function goBudget() {
-	uni.navigateTo({ url: '/pages/budget/index' })
+	const ym = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}`
+	uni.navigateTo({ url: `/pages/budget/index?yearMonth=${ym}` })
 }
 
 function goDetail() {
@@ -295,8 +299,9 @@ function goReport() {
 	overflow: hidden;
 }
 
-.avatar-emoji {
-	font-size: 40rpx;
+.avatar-img {
+	width: 60rpx;
+	height: 60rpx;
 }
 
 /* 预算卡片 */
@@ -370,7 +375,8 @@ function goReport() {
 }
 
 .cat-status-icon {
-	font-size: 36rpx;
+	width: 36rpx;
+	height: 36rpx;
 }
 
 .cat-status-text {
@@ -525,8 +531,9 @@ function goReport() {
 	animation: floating 3s ease-in-out infinite;
 }
 
-.floating-cat-emoji {
-	font-size: 48rpx;
+.floating-cat-img {
+	width: 56rpx;
+	height: 56rpx;
 }
 
 @keyframes floating {

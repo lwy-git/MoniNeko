@@ -10,7 +10,8 @@
 				<text class="add-icon">+</text>
 			</view>
 			<view v-else class="nav-item">
-				<text class="nav-icon">{{ item.icon }}</text>
+				<!-- 错误 1：图片必须用 :src 绑定，不能写在标签中间！！！ -->
+				<image class="nav-icon" :src="item.icon"></image>
 				<text class="nav-text">{{ item.text }}</text>
 			</view>
 		</view>
@@ -32,11 +33,11 @@ onMounted(() => {
 })
 
 const tabs = [
-	{ text: '首页', path: '/pages/home/index', icon: '📅' },
-	{ text: '统计', path: '/pages/stats/index', icon: '📊' },
-	{ text: '记账', path: '/pages/add/index', icon: '' },
-	{ text: '明细', path: '/pages/detail/index', icon: '📋' },
-	{ text: '我的', path: '/pages/profile/index', icon: '👤' }
+	{ text: '首页', path: '/pages/home/index', icon: '/static/icons/tabbar/baimao.svg' },
+	{ text: '统计', path: '/pages/stats/index', icon: '/static/icons/tabbar/buoumao.svg' },
+	{ text: '记账', path: '/pages/add/index', icon: '/static/icons/tabbar/sanhuamao.svg' },
+	{ text: '明细', path: '/pages/detail/index', icon: '/static/icons/tabbar/jumao.svg' },
+	{ text: '我的', path: '/pages/profile/index', icon: '/static/icons/tabbar/lanmao.svg' }
 ]
 
 function switchTab(index) {
@@ -74,20 +75,24 @@ function switchTab(index) {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+}
+
+/* 未选中颜色 */
+.nav-text {
+	font-size: 20rpx;
+	margin-top: 2rpx;
 	color: #9CA3AF;
 }
 
-.tabbar-item.active .nav-item {
+/* 激活时文字变色 */
+.tabbar-item.active .nav-text {
 	color: #F6C445;
 }
 
 .nav-icon {
-	font-size: 48rpx;
-}
-
-.nav-text {
-	font-size: 20rpx;
-	margin-top: 2rpx;
+	width: 48rpx;
+	height: 48rpx;
+	margin-bottom: 6rpx;
 }
 
 .add-btn {

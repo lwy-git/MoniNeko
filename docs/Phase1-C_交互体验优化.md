@@ -52,7 +52,7 @@ Phase 1-B 已完成核心记账闭环。App 功能可用但交互体验缺乏打
 
 ### Step 6: TabBar 加号按钮按压效果（中优先）
 
-**文件**: `components/custom-tab-bar/custom-tab-bar.vue`
+**文件**: `components/my-custom-tabbar/my-custom-tabbar.vue`
 
 - 外层 view 添加 `hover-class="add-btn-pressed"` + `:hover-stay-time="100"`
 - `.add-btn` 添加 `transition: transform 0.15s ease`
