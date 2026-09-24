@@ -75,6 +75,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 版本范围
 
-- **V1.0**（当前）：仅游客模式，本地数据，无登录/云同步/语音记账
+- **V1.0**（当前）：仅游客模式，本地数据，无登录/云同步
 - **V1.1**（规划中）：登录注册、云端同步、统计图表升级
 - UI 必须像素级还原 `PRD_记账App需求文档.md` 中嵌入的 HTML 原型

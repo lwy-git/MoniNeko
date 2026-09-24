@@ -17,6 +17,33 @@
 				<text :class="['amount-display', { 'anim-shake': shaking }]">¥ {{ displayAmount }}</text>
 			</view>
 
+			<!-- 语音记账 -->
+			<view v-if="!isEditMode" class="voice-entry" @tap="startVoiceAccounting">
+				<view class="voice-entry-icon">
+					<text class="voice-mic">🎙️</text>
+				</view>
+				<view class="voice-entry-info">
+					<text class="voice-entry-title">语音记账</text>
+					<text class="voice-entry-desc">试试说“早餐花了 8 块”</text>
+				</view>
+				<text class="voice-entry-action">点击说话</text>
+			</view>
+
+			<view v-if="voiceResult" class="voice-result-card">
+				<view class="voice-result-header">
+					<text class="voice-result-title">识别结果</text>
+					<text class="voice-result-clear" @tap="clearVoiceResult">清除</text>
+				</view>
+				<text class="voice-result-text">“{{ voiceResult.text }}”</text>
+				<view class="voice-result-tags">
+					<text class="voice-result-tag">{{ voiceResult.type === 'income' ? '收入' : '支出' }}</text>
+					<text class="voice-result-tag">{{ voiceCategoryLabel }}</text>
+					<text :class="['voice-result-tag', { 'voice-result-warning': !voiceResult.amount }]">
+						{{ voiceResult.amount ? `¥${voiceResult.amount.toFixed(2)}` : '请补充金额' }}
+					</text>
+				</view>
+			</view>
+
 			<!-- 分类选择 -->
 			<view class="category-grid">
 				<view
@@ -87,19 +114,35 @@
 				</view>
 			</view>
 		</view>
+
+		<view v-if="isListening" class="voice-overlay">
+			<view class="voice-dialog">
+				<view class="voice-wave">
+					<text v-for="index in 5" :key="index" :class="['voice-wave-bar', `voice-wave-bar-${index}`]"></text>
+				</view>
+				<text class="voice-listening-title">正在听你说...</text>
+				<text class="voice-listening-tip">说完后稍等一下，将自动识别并回填</text>
+				<view class="voice-cancel-btn" @tap="cancelVoiceAccounting">
+					<text class="voice-cancel-text">取消</text>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onHide } from '@dcloudio/uni-app'
 import { useExpenseStore } from '@/store/expense-store.js'
 import { useUserStore } from '@/store/user-store.js'
+import { useVoiceRecognition } from '@/hooks/use-voice-recognition.js'
 import { CATEGORIES, INCOME_CATEGORIES } from '@/config/constants.js'
 import { getToday, getCurrentTime } from '@/utils/helpers.js'
+import { parseVoiceExpense } from '@/utils/voice-expense-parser.js'
 
 const expenseStore = useExpenseStore()
 const userStore = useUserStore()
+const { isListening, startListening, cancelListening } = useVoiceRecognition()
 
 const isExpense = ref(true)
 const selectedCategory = ref(0)
@@ -108,15 +151,23 @@ const remark = ref('')
 const shaking = ref(false)
 const expenseDate = ref(getToday())
 const returnToDateDetail = ref(false)
+const voiceResult = ref(null)
 const isEditMode = computed(() => !!expenseStore.editingRecord)
 
 const categories = computed(() => isExpense.value ? CATEGORIES : INCOME_CATEGORIES)
+
+const voiceCategoryLabel = computed(() => {
+	if (!voiceResult.value) return ''
+	const list = voiceResult.value.type === 'income' ? INCOME_CATEGORIES : CATEGORIES
+	return list.find(item => item.key === voiceResult.value.category)?.label || '其他'
+})
 
 watch(isExpense, () => {
 	selectedCategory.value = 0
 }, { flush: 'sync' })
 
 onShow(async () => {
+	voiceResult.value = null
 	const record = expenseStore.editingRecord
 	if (record) {
 		returnToDateDetail.value = false
@@ -139,6 +190,10 @@ onShow(async () => {
 	await expenseStore.fetchTemplates(userStore.userId)
 })
 
+onHide(() => {
+	if (isListening.value) cancelListening()
+})
+
 const displayAmount = computed(() => {
 	if (!amountStr.value) return '0.00'
 	return amountStr.value
@@ -156,6 +211,41 @@ function inputKey(key) {
 
 function onDelete() {
 	amountStr.value = amountStr.value.slice(0, -1)
+}
+
+async function startVoiceAccounting() {
+	if (isListening.value) return
+	try {
+		const text = await startListening()
+		if (!text) return
+		applyVoiceResult(parseVoiceExpense(text))
+	} catch (error) {
+		if (error?.message === '已取消语音识别') return
+		uni.showToast({ title: error?.message || '语音识别失败', icon: 'none', duration: 2500 })
+	}
+}
+
+function applyVoiceResult(result) {
+	voiceResult.value = result
+	isExpense.value = result.type !== 'income'
+	const list = result.type === 'income' ? INCOME_CATEGORIES : CATEGORIES
+	const index = list.findIndex(item => item.key === result.category)
+	selectedCategory.value = index >= 0 ? index : list.length - 1
+	if (result.amount) amountStr.value = String(result.amount)
+	if (result.remark) remark.value = result.remark
+	uni.showToast({
+		title: result.success ? '已识别，请确认后保存' : '没听清金额，请手动补充',
+		icon: 'none',
+		duration: 2200
+	})
+}
+
+function cancelVoiceAccounting() {
+	cancelListening()
+}
+
+function clearVoiceResult() {
+	voiceResult.value = null
 }
 
 async function onSubmit() {
@@ -411,6 +501,194 @@ function goBack() {
 	flex: 1;
 	font-size: 26rpx;
 	color: var(--color-text-primary);
+}
+
+/* 语音记账 */
+.voice-entry {
+	display: flex;
+	align-items: center;
+	gap: 16rpx;
+	padding: 18rpx 22rpx;
+	margin-bottom: 24rpx;
+	background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(246, 196, 69, 0.15));
+	border: 2rpx solid rgba(244, 114, 182, 0.18);
+	border-radius: 28rpx;
+}
+
+.voice-entry-icon {
+	width: 64rpx;
+	height: 64rpx;
+	background: var(--color-bg-card);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: var(--shadow-card);
+}
+
+.voice-mic {
+	font-size: 30rpx;
+}
+
+.voice-entry-info {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.voice-entry-title {
+	font-size: 25rpx;
+	font-weight: 800;
+	color: var(--color-text-primary);
+}
+
+.voice-entry-desc {
+	font-size: 20rpx;
+	color: var(--color-text-muted);
+}
+
+.voice-entry-action {
+	font-size: 21rpx;
+	font-weight: 800;
+	color: var(--color-paw-pink);
+}
+
+.voice-result-card {
+	padding: 20rpx 24rpx;
+	margin: -8rpx 0 24rpx;
+	background: var(--color-bg-card);
+	border-radius: 28rpx;
+	box-shadow: var(--shadow-card);
+}
+
+.voice-result-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.voice-result-title {
+	font-size: 22rpx;
+	font-weight: 800;
+	color: var(--color-text-primary);
+}
+
+.voice-result-clear {
+	font-size: 20rpx;
+	color: var(--color-text-muted);
+}
+
+.voice-result-text {
+	display: block;
+	font-size: 23rpx;
+	color: var(--color-text-secondary);
+	margin-top: 8rpx;
+}
+
+.voice-result-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10rpx;
+	margin-top: 14rpx;
+}
+
+.voice-result-tag {
+	padding: 5rpx 14rpx;
+	background: rgba(52, 211, 153, 0.12);
+	border-radius: var(--radius-full);
+	font-size: 19rpx;
+	font-weight: 700;
+	color: var(--color-success);
+}
+
+.voice-result-warning {
+	background: rgba(251, 146, 60, 0.12);
+	color: var(--color-warning);
+}
+
+.voice-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1000;
+	background: rgba(74, 55, 40, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 48rpx;
+}
+
+.voice-dialog {
+	width: 100%;
+	padding: 56rpx 40rpx 40rpx;
+	background: var(--color-bg-card);
+	border-radius: var(--radius-lg);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	box-shadow: var(--shadow-elevated);
+}
+
+.voice-wave {
+	height: 100rpx;
+	display: flex;
+	align-items: center;
+	gap: 12rpx;
+}
+
+.voice-wave-bar {
+	width: 14rpx;
+	height: 44rpx;
+	background: var(--color-paw-pink);
+	border-radius: var(--radius-full);
+	animation: voice-wave 0.9s ease-in-out infinite;
+}
+
+.voice-wave-bar-2,
+.voice-wave-bar-4 {
+	animation-delay: 0.15s;
+}
+
+.voice-wave-bar-3 {
+	animation-delay: 0.3s;
+}
+
+.voice-wave-bar-5 {
+	animation-delay: 0.45s;
+}
+
+.voice-listening-title {
+	font-size: 34rpx;
+	font-weight: 800;
+	color: var(--color-text-primary);
+	margin-top: 18rpx;
+}
+
+.voice-listening-tip {
+	font-size: 22rpx;
+	color: var(--color-text-muted);
+	margin-top: 8rpx;
+	text-align: center;
+}
+
+.voice-cancel-btn {
+	margin-top: 36rpx;
+	padding: 16rpx 48rpx;
+	background: var(--color-bg-gray);
+	border-radius: var(--radius-full);
+}
+
+.voice-cancel-text {
+	font-size: 24rpx;
+	font-weight: 700;
+	color: var(--color-text-secondary);
+}
+
+@keyframes voice-wave {
+	0%, 100% { transform: scaleY(0.55); }
+	50% { transform: scaleY(1.8); }
 }
 
 .template-section {

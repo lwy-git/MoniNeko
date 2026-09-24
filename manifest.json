@@ -18,7 +18,8 @@
         },
         /* 模块配置 */
         "modules" : {
-            "SQLite" : {}
+            "SQLite" : {},
+            "Speech" : {}
         },
         /* 应用发布信息 */
         "distribute" : {
@@ -33,6 +34,7 @@
                     "<uses-feature android:name=\"android.hardware.camera.autofocus\"/>",
                     "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.CAMERA\"/>",
+					"<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>",
                     "<uses-permission android:name=\"android.permission.GET_ACCOUNTS\"/>",
                     "<uses-permission android:name=\"android.permission.READ_PHONE_STATE\"/>",
                     "<uses-permission android:name=\"android.permission.CHANGE_WIFI_STATE\"/>",
@@ -44,7 +46,11 @@
             },
             /* ios打包配置 */
             "ios" : {
-                "dSYMs" : false
+				"dSYMs" : false,
+				"privacyDescription" : {
+					"NSMicrophoneUsageDescription" : "用于将你的语音转换为记账内容",
+					"NSSpeechRecognitionUsageDescription" : "用于识别金额、分类和备注并填写记账表单"
+				}
             },
             /* SDK配置 */
             "sdkConfigs" : {}
