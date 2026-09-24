@@ -66,6 +66,42 @@ export function useCat() {
 		return null
 	}
 
+	async function loadOwnedAccessories(userId) {
+		const db = getDB()
+		return await db.query('cat_accessory', (row) => row.user_id === userId)
+	}
+
+	async function purchaseAccessory(userId, accessoryKey, purchasePrice) {
+		const db = getDB()
+		const owned = await db.query('cat_accessory', (row) => {
+			return row.user_id === userId && row.accessory_key === accessoryKey
+		})
+		if (owned.length > 0) {
+			return { success: false, reason: 'owned' }
+		}
+
+		const accessory = await db.insert('cat_accessory', {
+			user_id: userId,
+			accessory_key: accessoryKey,
+			purchase_price: purchasePrice,
+			purchased_at: new Date().toISOString()
+		})
+		return { success: true, accessory }
+	}
+
+	async function updateAccessory(userId, accessoryKey) {
+		const db = getDB()
+		if (accessoryKey) {
+			const owned = await db.query('cat_accessory', (row) => {
+				return row.user_id === userId && row.accessory_key === accessoryKey
+			})
+			if (owned.length === 0) return null
+		}
+		const cats = await db.query('cat_status', (row) => row.user_id === userId)
+		if (cats.length === 0) return null
+		return await db.update('cat_status', cats[0].id, { current_accessory: accessoryKey })
+	}
+
 	async function getRecordStreak(userId) {
 		const db = getDB()
 		const records = await db.query('expense_record', (row) => {
@@ -121,6 +157,9 @@ export function useCat() {
 		checkin,
 		updateBreed,
 		updateCatName,
+		loadOwnedAccessories,
+		purchaseAccessory,
+		updateAccessory,
 		getRecordStreak,
 		loadAchievements,
 		unlockAchievement

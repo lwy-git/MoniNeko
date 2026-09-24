@@ -11,7 +11,7 @@
 
 			<view class="avatar-card">
 				<view class="avatar-wrap">
-					<image class="avatar-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
+					<cat-avatar :src="catStore.breedEmoji" :accessory="catStore.currentAccessory" size="medium" />
 				</view>
 				<text class="avatar-title">{{ nickname || '铲屎官' }}</text>
 				<text class="avatar-sub">游客模式 · 本地资料</text>
@@ -152,11 +152,6 @@ function goBack() {
 	align-items: center;
 	justify-content: center;
 	margin-bottom: 20rpx;
-}
-
-.avatar-img {
-	width: 88rpx;
-	height: 88rpx;
 }
 
 .avatar-title {

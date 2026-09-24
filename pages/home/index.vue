@@ -11,7 +11,7 @@
 					<text class="month-arrow-btn" @tap="nextMonth">›</text>
 				</view>
 				<view class="avatar-wrap" @tap="goProfile">
-					<image class="avatar-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
+					<cat-avatar :src="catStore.breedEmoji" :accessory="catStore.currentAccessory" size="small" />
 				</view>
 			</view>
 
@@ -34,7 +34,7 @@
 					</view>
 					<view class="budget-bottom">
 						<view class="cat-status">
-							<image class="cat-status-icon" :src="catStore.breedEmoji" mode="aspectFit"></image>
+							<cat-avatar :src="catStore.breedEmoji" :accessory="catStore.currentAccessory" size="tiny" />
 							<text class="cat-status-text">{{ catStatus.label }}喵~</text>
 						</view>
 						<view class="budget-btn" @tap="goBudget">
@@ -87,7 +87,7 @@
 
 		<!-- 悬浮招财猫 -->
 		<view class="floating-cat" @tap="goReport">
-			<image class="floating-cat-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
+			<cat-avatar :src="catStore.breedEmoji" :accessory="catStore.currentAccessory" size="small" />
 		</view>
 
 		<my-custom-tabbar :current="0" />
@@ -302,11 +302,6 @@ function goReport() {
 	overflow: hidden;
 }
 
-.avatar-img {
-	width: 60rpx;
-	height: 60rpx;
-}
-
 /* 预算卡片 */
 .budget-card {
 	background: var(--color-bg-card);
@@ -375,11 +370,6 @@ function goReport() {
 	display: flex;
 	align-items: center;
 	gap: 8rpx;
-}
-
-.cat-status-icon {
-	width: 36rpx;
-	height: 36rpx;
 }
 
 .cat-status-text {
@@ -532,11 +522,6 @@ function goReport() {
 	border: 2rpx solid var(--color-primary);
 	z-index: 100;
 	animation: floating 3s ease-in-out infinite;
-}
-
-.floating-cat-img {
-	width: 56rpx;
-	height: 56rpx;
 }
 
 @keyframes floating {

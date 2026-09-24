@@ -7,7 +7,7 @@
 
 				<!-- 猫咪 -->
 				<view class="report-cat">
-					<image class="report-cat-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
+					<cat-avatar :src="catStore.breedEmoji" :accessory="catStore.currentAccessory" size="large" />
 				</view>
 
 				<!-- 猫咪对话气泡 -->
@@ -59,7 +59,8 @@ onShow(async () => {
 	await Promise.all([
 		expenseStore.fetchByDate(userStore.userId, today),
 		expenseStore.fetchByMonth(userStore.userId, yearMonth),
-		budgetStore.fetchCurrentBudget(userStore.userId)
+		budgetStore.fetchCurrentBudget(userStore.userId),
+		catStore.fetchCatStatus(userStore.userId)
 	])
 })
 
@@ -125,11 +126,6 @@ function goBack() {
 	display: flex;
 	justify-content: center;
 	margin-bottom: 32rpx;
-}
-
-.report-cat-img {
-	width: 120rpx;
-	height: 120rpx;
 }
 
 .chat-bubble {

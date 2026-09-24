@@ -43,6 +43,14 @@ export const TABLES = {
 		current_accessory TEXT DEFAULT '',
 		last_checkin_date TEXT DEFAULT ''
 	)`,
+	cat_accessory: `CREATE TABLE IF NOT EXISTS cat_accessory (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id TEXT NOT NULL,
+		accessory_key TEXT NOT NULL,
+		purchase_price INTEGER NOT NULL,
+		purchased_at TEXT NOT NULL,
+		UNIQUE(user_id, accessory_key)
+	)`,
 	achievement: `CREATE TABLE IF NOT EXISTS achievement (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id TEXT NOT NULL,
@@ -55,5 +63,6 @@ export const TABLES = {
 export const INDEXES = [
 	'CREATE INDEX IF NOT EXISTS idx_expense_user_date ON expense_record(user_id, expense_date)',
 	'CREATE INDEX IF NOT EXISTS idx_budget_user_month ON monthly_budget(user_id, year_month)',
+	'CREATE INDEX IF NOT EXISTS idx_accessory_user ON cat_accessory(user_id)',
 	'CREATE INDEX IF NOT EXISTS idx_achievement_user ON achievement(user_id)'
 ]

@@ -5,7 +5,11 @@
 			<view class="profile-info">
 				<view class="cat-avatar-wrap">
 					<view class="cat-avatar">
-						<image class="cat-emoji-img" :src="catStore.breedEmoji" mode="aspectFit"></image>
+						<cat-avatar
+							:src="catStore.breedEmoji"
+							:accessory="catStore.currentAccessory"
+							size="medium"
+						/>
 					</view>
 					<view class="level-badge">
 						<text class="level-text">Lv.{{ catStore.level }}</text>
@@ -160,7 +164,7 @@ async function onExport() {
 }
 
 function goShop() {
-	uni.showToast({ title: '装扮商店即将开放喵~', icon: 'none' })
+	uni.navigateTo({ url: '/pages/shop/index' })
 }
 
 function goAchievements() {
@@ -208,11 +212,6 @@ function goWelcome() {
 	justify-content: center;
 	box-shadow: var(--shadow-elevated);
 	border: 4rpx solid var(--color-bg-card);
-}
-
-.cat-emoji-img {
-	width: 80rpx;
-	height: 80rpx;
 }
 
 .level-badge {

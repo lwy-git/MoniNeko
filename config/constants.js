@@ -51,6 +51,57 @@ export const CAT_BREED_EMOJI = {
 	black: '/static/icons/tabbar/heimao.svg'
 }
 
+export const CAT_ACCESSORIES = [
+	{
+		key: 'red_bow',
+		label: '元气蝴蝶结',
+		description: '今天也要精神满满地记账喵',
+		icon: '🎀',
+		price: 8,
+		unlockLevel: 1
+	},
+	{
+		key: 'sunflower',
+		label: '向日葵头饰',
+		description: '把每一笔账都晒成好心情',
+		icon: '🌻',
+		price: 15,
+		unlockLevel: 2
+	},
+	{
+		key: 'gentleman_hat',
+		label: '绅士礼帽',
+		description: '优雅管理猫粮和小金库',
+		icon: '🎩',
+		price: 25,
+		unlockLevel: 3
+	},
+	{
+		key: 'gold_crown',
+		label: '招财皇冠',
+		description: '送给精打细算的记账达人',
+		icon: '👑',
+		price: 40,
+		unlockLevel: 5
+	},
+	{
+		key: 'star_glasses',
+		label: '星星眼镜',
+		description: '用闪亮目光发现每一笔开销',
+		icon: '🤩',
+		price: 55,
+		unlockLevel: 8
+	},
+	{
+		key: 'magic_hat',
+		label: '魔法师帽',
+		description: '让预算规划变成省钱魔法',
+		icon: '🧙',
+		price: 80,
+		unlockLevel: 10
+	}
+]
+
 export const BUDGET_STATUS = {
 	GOOD: { key: 'good', label: '节奏良好', color: '#34D399' },
 	WARNING: { key: 'warning', label: '节奏偏快', color: '#FB923C' },
