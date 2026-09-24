@@ -134,7 +134,9 @@ function onChangeBreed(breedKey) {
 async function onExport() {
 	try {
 		const db = getDB()
-		const records = await db.query('expense_record', (r) => r.user_id === userStore.userId)
+		const records = await db.query('expense_record', (r) => {
+			return r.user_id === userStore.userId && !r.is_template
+		})
 		if (!records.length) {
 			uni.showToast({ title: '暂无数据可导出喵~', icon: 'none' })
 			return

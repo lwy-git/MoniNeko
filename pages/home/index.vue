@@ -189,8 +189,9 @@ const calendarCells = computed(() => {
 
 	const dailyAmounts = {}
 	expenseStore.monthExpenses.forEach(e => {
+		if (e.type === 'income') return
 		const day = parseInt(e.expense_date.split('-')[2], 10)
-		dailyAmounts[day] = (dailyAmounts[day] || 0) + e.amount
+		dailyAmounts[day] = (dailyAmounts[day] || 0) + Number(e.amount)
 	})
 
 	const cells = []
@@ -220,7 +221,9 @@ function formatMoney(val) {
 }
 
 function onDayTap(day) {
-	// TODO: 跳转到当日明细
+	const date = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+	expenseStore.openDateDetail(date)
+	uni.switchTab({ url: '/pages/detail/index' })
 }
 
 function goProfile() {

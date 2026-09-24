@@ -38,6 +38,26 @@
 				<input class="remark-input" v-model="remark" placeholder="写点备注喵..." />
 			</view>
 
+			<view v-if="!isEditMode" class="template-section">
+				<view class="template-header">
+					<text class="template-title">快捷模板</text>
+					<text class="template-save" @tap="saveAsTemplate">保存当前为模板</text>
+				</view>
+				<scroll-view v-if="expenseStore.templates.length" scroll-x class="template-list">
+					<view
+						v-for="item in expenseStore.templates"
+						:key="item.id"
+						class="template-chip"
+						@tap="applyTemplate(item)"
+						@longpress="confirmRemoveTemplate(item)"
+					>
+						<text class="template-chip-name">{{ item.item_name }}</text>
+						<text class="template-chip-amount">¥{{ Number(item.amount).toFixed(2) }}</text>
+					</view>
+				</scroll-view>
+				<text v-else class="template-empty">填写金额与备注后即可保存常用模板</text>
+			</view>
+
 			<!-- 数字键盘 -->
 			<view class="keyboard">
 				<view class="keyboard-main">
@@ -86,29 +106,37 @@ const selectedCategory = ref(0)
 const amountStr = ref('')
 const remark = ref('')
 const shaking = ref(false)
+const expenseDate = ref(getToday())
+const returnToDateDetail = ref(false)
 const isEditMode = computed(() => !!expenseStore.editingRecord)
 
 const categories = computed(() => isExpense.value ? CATEGORIES : INCOME_CATEGORIES)
 
 watch(isExpense, () => {
 	selectedCategory.value = 0
-})
+}, { flush: 'sync' })
 
-onShow(() => {
+onShow(async () => {
 	const record = expenseStore.editingRecord
 	if (record) {
+		returnToDateDetail.value = false
 		isExpense.value = record.type !== 'income'
 		amountStr.value = String(record.amount)
 		remark.value = record.remark || ''
 		const catList = record.type === 'income' ? INCOME_CATEGORIES : CATEGORIES
 		const catIdx = catList.findIndex(c => c.key === record.category)
 		selectedCategory.value = catIdx >= 0 ? catIdx : 0
+		expenseDate.value = record.expense_date || getToday()
 	} else {
+		const requestedDate = expenseStore.consumeExpenseDate()
+		returnToDateDetail.value = !!requestedDate
 		isExpense.value = true
 		amountStr.value = ''
 		remark.value = ''
 		selectedCategory.value = 0
+		expenseDate.value = requestedDate || getToday()
 	}
+	await expenseStore.fetchTemplates(userStore.userId)
 })
 
 const displayAmount = computed(() => {
@@ -143,7 +171,7 @@ async function onSubmit() {
 
 	try {
 		if (isEditMode.value) {
-			await expenseStore.editExpense(expenseStore.editingRecord.id, {
+			const updated = await expenseStore.editExpense(expenseStore.editingRecord.id, {
 				type: isExpense.value ? 'expense' : 'income',
 				category: cat.key,
 				item_name: remark.value || cat.label,
@@ -152,6 +180,7 @@ async function onSubmit() {
 			})
 			uni.showToast({ title: '修改成功喵~', icon: 'success' })
 			expenseStore.clearEditingRecord()
+			expenseStore.openDateDetail(updated.expense_date)
 			setTimeout(() => { uni.switchTab({ url: '/pages/detail/index' }) }, 500)
 		} else {
 			const record = {
@@ -160,7 +189,7 @@ async function onSubmit() {
 				category: cat.key,
 				item_name: remark.value || cat.label,
 				amount,
-				expense_date: getToday(),
+				expense_date: expenseDate.value,
 				expense_time: getCurrentTime(),
 				remark: remark.value || ''
 			}
@@ -169,11 +198,72 @@ async function onSubmit() {
 			amountStr.value = ''
 			remark.value = ''
 			selectedCategory.value = 0
-			setTimeout(() => { uni.switchTab({ url: '/pages/home/index' }) }, 500)
+			if (returnToDateDetail.value) {
+				expenseStore.openDateDetail(expenseDate.value)
+				setTimeout(() => { uni.switchTab({ url: '/pages/detail/index' }) }, 500)
+			} else {
+				setTimeout(() => { uni.switchTab({ url: '/pages/home/index' }) }, 500)
+			}
 		}
 	} catch (e) {
 		uni.showToast({ title: isEditMode.value ? '修改失败' : '记账失败', icon: 'none' })
 	}
+}
+
+function applyTemplate(template) {
+	isExpense.value = template.type !== 'income'
+	amountStr.value = String(template.amount)
+	remark.value = template.remark || template.item_name || ''
+	const list = template.type === 'income' ? INCOME_CATEGORIES : CATEGORIES
+	const index = list.findIndex(item => item.key === template.category)
+	selectedCategory.value = index >= 0 ? index : 0
+}
+
+async function saveAsTemplate() {
+	const amount = parseFloat(amountStr.value)
+	if (!amount || amount <= 0) {
+		uni.showToast({ title: '先填写模板金额喵~', icon: 'none' })
+		return
+	}
+	const category = categories.value[selectedCategory.value]
+	const itemName = remark.value.trim() || category.label
+	const duplicate = expenseStore.templates.some(item => {
+		return item.type === (isExpense.value ? 'expense' : 'income') &&
+			item.category === category.key &&
+			item.item_name === itemName &&
+			Number(item.amount) === amount
+	})
+	if (duplicate) {
+		uni.showToast({ title: '这个模板已经保存过啦', icon: 'none' })
+		return
+	}
+	try {
+		await expenseStore.createTemplate({
+			user_id: userStore.userId,
+			type: isExpense.value ? 'expense' : 'income',
+			category: category.key,
+			item_name: itemName,
+			amount,
+			expense_date: getToday(),
+			expense_time: getCurrentTime(),
+			remark: remark.value.trim()
+		})
+		uni.showToast({ title: '模板已保存喵~', icon: 'success' })
+	} catch (e) {
+		uni.showToast({ title: '模板保存失败', icon: 'none' })
+	}
+}
+
+function confirmRemoveTemplate(template) {
+	uni.showModal({
+		title: '删除模板',
+		content: `确定删除“${template.item_name}”吗？`,
+		success: async (res) => {
+			if (!res.confirm) return
+			await expenseStore.removeTemplate(template.id)
+			uni.showToast({ title: '模板已删除', icon: 'none' })
+		}
+	})
 }
 
 function goBack() {
@@ -323,11 +413,68 @@ function goBack() {
 	color: var(--color-text-primary);
 }
 
+.template-section {
+	margin-bottom: 8rpx;
+}
+
+.template-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12rpx;
+	padding: 0 8rpx;
+}
+
+.template-title {
+	font-size: 24rpx;
+	font-weight: 800;
+	color: var(--color-text-primary);
+}
+
+.template-save {
+	font-size: 22rpx;
+	font-weight: 700;
+	color: var(--color-primary);
+}
+
+.template-list {
+	white-space: nowrap;
+}
+
+.template-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 12rpx;
+	padding: 14rpx 22rpx;
+	margin-right: 12rpx;
+	background: var(--color-bg-card);
+	border-radius: var(--radius-full);
+	box-shadow: var(--shadow-card);
+}
+
+.template-chip-name {
+	font-size: 22rpx;
+	font-weight: 700;
+	color: var(--color-text-primary);
+}
+
+.template-chip-amount {
+	font-size: 20rpx;
+	color: var(--color-paw-pink);
+}
+
+.template-empty {
+	display: block;
+	font-size: 20rpx;
+	color: var(--color-text-muted);
+	padding: 8rpx;
+}
+
 /* 数字键盘 */
 .keyboard {
 	display: flex;
 	gap: 12rpx;
-	margin-top: 32rpx;
+	margin-top: 16rpx;
 	padding-bottom: 32rpx;
 	flex-shrink: 0;
 }

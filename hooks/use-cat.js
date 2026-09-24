@@ -68,7 +68,9 @@ export function useCat() {
 
 	async function getRecordStreak(userId) {
 		const db = getDB()
-		const records = await db.query('expense_record', (row) => row.user_id === userId)
+		const records = await db.query('expense_record', (row) => {
+			return row.user_id === userId && !row.is_template
+		})
 		const dates = [...new Set(records.map(r => r.expense_date))].sort((a, b) => b.localeCompare(a))
 		if (dates.length === 0) return 0
 

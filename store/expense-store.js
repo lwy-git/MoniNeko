@@ -7,8 +7,11 @@ export const useExpenseStore = defineStore('expense', () => {
 	const todayExpenses = ref([])
 	const monthExpenses = ref([])
 	const selectedDate = ref('')
+	const pendingDetailDate = ref('')
+	const pendingExpenseDate = ref('')
+	const templates = ref([])
 	const editingRecord = ref(null)
-	const { loadByDate, loadByMonth, addExpense, deleteExpense, updateExpense } = useExpense()
+	const { loadByDate, loadByMonth, addExpense, deleteExpense, updateExpense, loadTemplates } = useExpense()
 
 	const todayTotal = computed(() =>
 		todayExpenses.value
@@ -29,6 +32,10 @@ export const useExpenseStore = defineStore('expense', () => {
 
 	async function fetchByMonth(userId, yearMonth) {
 		monthExpenses.value = await loadByMonth(userId, yearMonth)
+	}
+
+	async function fetchTemplates(userId) {
+		templates.value = await loadTemplates(userId)
 	}
 
 	async function createExpense(record) {
@@ -60,6 +67,40 @@ export const useExpenseStore = defineStore('expense', () => {
 		return updated
 	}
 
+	async function createTemplate(record) {
+		const template = await addExpense({
+			...record,
+			is_template: 1
+		})
+		templates.value.push(template)
+		return template
+	}
+
+	async function removeTemplate(id) {
+		await deleteExpense(id)
+		templates.value = templates.value.filter(item => item.id !== id)
+	}
+
+	function openDateDetail(date) {
+		pendingDetailDate.value = date
+	}
+
+	function consumeDetailDate() {
+		const date = pendingDetailDate.value
+		pendingDetailDate.value = ''
+		return date
+	}
+
+	function createForDate(date) {
+		pendingExpenseDate.value = date
+	}
+
+	function consumeExpenseDate() {
+		const date = pendingExpenseDate.value
+		pendingExpenseDate.value = ''
+		return date
+	}
+
 	function setEditingRecord(record) {
 		editingRecord.value = record
 	}
@@ -72,14 +113,22 @@ export const useExpenseStore = defineStore('expense', () => {
 		todayExpenses,
 		monthExpenses,
 		selectedDate,
+		templates,
 		editingRecord,
 		todayTotal,
 		monthTotal,
 		fetchByDate,
 		fetchByMonth,
+		fetchTemplates,
 		createExpense,
+		createTemplate,
 		removeExpense,
+		removeTemplate,
 		editExpense,
+		openDateDetail,
+		consumeDetailDate,
+		createForDate,
+		consumeExpenseDate,
 		setEditingRecord,
 		clearEditingRecord
 	}

@@ -6,7 +6,7 @@
 				<view class="header-back" @tap="goBack">
 					<text class="back-icon">‹</text>
 				</view>
-				<text class="page-title">记账明细</text>
+				<text class="page-title">{{ focusedDate ? '当日明细' : '记账明细' }}</text>
 				<view class="header-search" @tap="showSearch = !showSearch">
 					<text class="search-icon">🔍</text>
 				</view>
@@ -75,6 +75,16 @@
 						</view>
 					</view>
 				</view>
+
+				<view v-if="focusedDate" class="date-summary">
+					<view class="date-summary-info">
+						<text class="date-summary-label">当日支出</text>
+						<text class="date-summary-value">¥{{ focusedDateTotal.toFixed(2) }}</text>
+					</view>
+					<view class="quick-add-btn" @tap="quickAddForDate">
+						<text class="quick-add-text">＋ 快速记一笔</text>
+					</view>
+				</view>
 			</scroll-view>
 		</view>
 		<my-custom-tabbar :current="3" />
@@ -83,7 +93,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onHide } from '@dcloudio/uni-app'
 import { useExpenseStore } from '@/store/expense-store.js'
 import { useUserStore } from '@/store/user-store.js'
 import { CATEGORIES, INCOME_CATEGORIES } from '@/config/constants.js'
@@ -103,6 +113,7 @@ const loading = ref(false)
 const showSearch = ref(false)
 const searchKeyword = ref('')
 const filterCategory = ref(null)
+const focusedDate = ref('')
 let touchStartX = 0
 let touchStartY = 0
 let isSwiping = false
@@ -157,13 +168,26 @@ function goEdit(item) {
 
 onShow(async () => {
 	loading.value = true
-	const yearMonth = getCurrentYearMonth()
-	await expenseStore.fetchByMonth(userStore.userId, yearMonth)
+	const requestedDate = expenseStore.consumeDetailDate()
+	if (requestedDate) {
+		focusedDate.value = requestedDate
+	}
+	if (focusedDate.value) {
+		await expenseStore.fetchByDate(userStore.userId, focusedDate.value)
+	} else {
+		const yearMonth = getCurrentYearMonth()
+		await expenseStore.fetchByMonth(userStore.userId, yearMonth)
+	}
 	loading.value = false
 })
 
+onHide(() => {
+	focusedDate.value = ''
+	swipingId.value = null
+})
+
 const groupedExpenses = computed(() => {
-	const expenses = expenseStore.monthExpenses
+	const expenses = focusedDate.value ? expenseStore.todayExpenses : expenseStore.monthExpenses
 	if (!expenses.length) return []
 
 	const today = getToday()
@@ -211,6 +235,12 @@ const groupedExpenses = computed(() => {
 	})
 })
 
+const focusedDateTotal = computed(() => {
+	return expenseStore.todayExpenses
+		.filter(item => item.type !== 'income')
+		.reduce((sum, item) => sum + Number(item.amount), 0)
+})
+
 const filteredExpenses = computed(() => {
 	const groups = groupedExpenses.value
 	if (!searchKeyword.value && !filterCategory.value) return groups
@@ -233,7 +263,13 @@ const filteredExpenses = computed(() => {
 })
 
 function goBack() {
+	focusedDate.value = ''
 	uni.switchTab({ url: '/pages/home/index' })
+}
+
+function quickAddForDate() {
+	expenseStore.createForDate(focusedDate.value)
+	uni.switchTab({ url: '/pages/add/index' })
 }
 </script>
 
@@ -519,5 +555,45 @@ function goBack() {
 .empty-text {
 	font-size: 26rpx;
 	color: var(--color-text-muted);
+}
+
+.date-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24rpx;
+	background: var(--color-bg-card);
+	border-radius: 32rpx;
+	padding: 28rpx 32rpx;
+	margin: 8rpx 12rpx 32rpx 0;
+	box-shadow: var(--shadow-card);
+}
+
+.date-summary-info {
+	display: flex;
+	flex-direction: column;
+}
+
+.date-summary-label {
+	font-size: 22rpx;
+	color: var(--color-text-muted);
+}
+
+.date-summary-value {
+	font-size: 34rpx;
+	font-weight: 800;
+	color: var(--color-text-primary);
+}
+
+.quick-add-btn {
+	padding: 18rpx 28rpx;
+	background: var(--color-primary);
+	border-radius: var(--radius-full);
+}
+
+.quick-add-text {
+	font-size: 24rpx;
+	font-weight: 800;
+	color: #FFFFFF;
 }
 </style>

@@ -20,7 +20,9 @@ export function useAchievementDetector() {
 
 	async function checkAfterExpense(userId) {
 		const db = getDB()
-		const records = await db.query('expense_record', (r) => r.user_id === userId && r.type !== 'income')
+		const records = await db.query('expense_record', (r) => {
+			return r.user_id === userId && r.type !== 'income' && !r.is_template
+		})
 
 		if (records.length === 1) {
 			await tryUnlock(userId, 'first_expense')
@@ -53,7 +55,10 @@ export function useAchievementDetector() {
 
 		const budget = budgets[0].budget_amount
 		const records = await db.query('expense_record', (r) =>
-			r.user_id === userId && r.expense_date.startsWith(yearMonth) && r.type !== 'income'
+			r.user_id === userId &&
+			r.expense_date.startsWith(yearMonth) &&
+			r.type !== 'income' &&
+			!r.is_template
 		)
 		const total = records.reduce((sum, r) => sum + r.amount, 0)
 		if (total > 0 && total < budget) {
